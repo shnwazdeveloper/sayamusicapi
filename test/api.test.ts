@@ -16,6 +16,17 @@ describe("SayaMusicAPI", () => {
     expect(body.data.endpointCount).toBe(endpointCount);
   });
 
+  it("serves the landing page and docs page", async () => {
+    const landing = await app.request("/");
+    expect(landing.status).toBe(200);
+    expect(landing.headers.get("content-type")).toContain("text/html");
+    expect(await landing.text()).toContain("SayaMusicAPI");
+
+    const docs = await app.request("/docs");
+    expect(docs.status).toBe(200);
+    expect(await docs.text()).toContain("Free Limit Policy");
+  });
+
   it("serves the endpoint registry", async () => {
     const response = await app.request("/v1/endpoints");
     expect(response.status).toBe(200);

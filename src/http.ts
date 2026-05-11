@@ -42,12 +42,16 @@ export function cacheTtl(c: ApiContext, fallback = 900) {
   return Math.min(parsed, 86400);
 }
 
-export function limit(c: ApiContext, fallback = 10, max = 50) {
-  const parsed = Number.parseInt(c.req.query("limit") || `${fallback}`, 10);
+export function limit(c: ApiContext, fallback = 100, max?: number) {
+  const raw = c.req.query("limit");
+  if (!raw || raw.toLowerCase() === "all" || raw === "0") {
+    return max ?? fallback;
+  }
+  const parsed = Number.parseInt(raw, 10);
   if (!Number.isFinite(parsed) || parsed < 1) {
     return fallback;
   }
-  return Math.min(parsed, max);
+  return max ? Math.min(parsed, max) : parsed;
 }
 
 export function offset(c: ApiContext, fallback = 0, max = 5000) {

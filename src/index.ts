@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { endpointCount, endpoints, buildOpenApi } from "./endpoints";
 import { ApiError, jsonError, jsonOk, requiredParam, requiredQuery, yes } from "./http";
+import { docsPage, landingPage, siteCss } from "./site";
 import type { ApiBindings } from "./types";
 import {
   aggregateSearch,
@@ -76,7 +77,7 @@ app.notFound((c) =>
   jsonError(
     c,
     new ApiError(404, "Endpoint not found", {
-      docs: "/v1/endpoints"
+      docs: "/docs"
     })
   )
 );
@@ -120,20 +121,28 @@ function welcome(origin: string) {
     version: "0.1.0",
     endpointCount,
     docs: {
+      docs: `${origin}/docs`,
       endpoints: `${origin}/v1/endpoints`,
       openapi: `${origin}/v1/openapi.json`,
       health: `${origin}/health`
     },
     examples: [
-      `${origin}/v1/search/tracks?q=alan%20walker&limit=5`,
-      `${origin}/v1/apple/search/songs?q=believer&limit=5`,
-      `${origin}/v1/musicbrainz/search/recordings?q=dua%20lipa&limit=5`,
-      `${origin}/v1/archive/search/music?q=jazz&limit=5`
+      `${origin}/v1/search/tracks?q=alan%20walker`,
+      `${origin}/v1/apple/search/songs?q=believer`,
+      `${origin}/v1/musicbrainz/search/recordings?q=dua%20lipa`,
+      `${origin}/v1/archive/search/music?q=jazz`
     ]
   };
 }
 
-app.get("/", (c) => jsonOk(c, welcome(new URL(c.req.url).origin)));
+app.get("/", (c) => c.html(landingPage(new URL(c.req.url).origin)));
+app.get("/docs", (c) => c.html(docsPage(new URL(c.req.url).origin)));
+app.get("/site.css", (c) =>
+  c.text(siteCss(), 200, {
+    "Content-Type": "text/css; charset=utf-8",
+    "Cache-Control": "public, max-age=3600"
+  })
+);
 app.get("/health", (c) =>
   jsonOk(c, {
     status: "ok",
@@ -156,6 +165,8 @@ app.get("/v1/quality", (c) =>
   jsonOk(c, {
     policy:
       "This API resolves legal metadata, previews, artwork, open streams, and public/free downloads. It does not bypass paywalls or DRM.",
+    apiSideLimits:
+      "No API-side quota, paid tier, or gateway rate limit is added by SayaMusicAPI. Provider result page sizes use each upstream public maximum where required.",
     tiers: [
       {
         source: "apple",
@@ -399,4 +410,3 @@ app.get("/v1/audius/trending/playlists", (c) =>
 );
 
 export default app;
-

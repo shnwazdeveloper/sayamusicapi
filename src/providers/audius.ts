@@ -35,7 +35,7 @@ export async function audiusSearch(
 ) {
   return audiusGet(c, `/${resource}/search`, {
     query: query || requiredQuery(c),
-    limit: `${limit(c, 10, 50)}`
+    limit: `${limit(c, 100, 100)}`
   });
 }
 
@@ -86,7 +86,7 @@ export async function audiusTrending(
   resource: "tracks" | "playlists"
 ) {
   return audiusGet(c, `/${resource}/trending`, {
-    limit: `${limit(c, 10, 50)}`,
+    limit: `${limit(c, 100, 100)}`,
     genre: c.req.query("genre") || "",
     time: c.req.query("time") || ""
   });
@@ -94,13 +94,13 @@ export async function audiusTrending(
 
 export async function audiusUserTracks(c: ApiContext) {
   return audiusGet(c, `/users/${requiredParam(c, "id")}/tracks`, {
-    limit: `${limit(c, 25, 100)}`
+    limit: `${limit(c, 100, 100)}`
   });
 }
 
 export async function audiusPlaylistTracks(c: ApiContext) {
   return audiusGet(c, `/playlists/${requiredParam(c, "id")}/tracks`, {
-    limit: `${limit(c, 25, 100)}`
+    limit: `${limit(c, 100, 100)}`
   });
 }
 

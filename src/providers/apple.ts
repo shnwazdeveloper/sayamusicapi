@@ -16,7 +16,7 @@ export async function appleSearch(
   const url = new URL("/search", APPLE_BASE);
   url.searchParams.set("term", options.term || requiredQuery(c));
   url.searchParams.set("country", defaultCountry(c));
-  url.searchParams.set("limit", `${limit(c, 10, 200)}`);
+  url.searchParams.set("limit", `${limit(c, 200, 200)}`);
   url.searchParams.set("offset", `${offset(c, 0, 5000)}`);
 
   const media = c.req.query("media") || options.media;
@@ -49,7 +49,7 @@ export async function appleLookupById(
   const url = new URL("/lookup", APPLE_BASE);
   url.searchParams.set("id", id);
   url.searchParams.set("country", defaultCountry(c));
-  url.searchParams.set("limit", `${limit(c, 50, 200)}`);
+  url.searchParams.set("limit", `${limit(c, 200, 200)}`);
 
   if (entity) {
     url.searchParams.set("entity", entity);
@@ -74,7 +74,7 @@ export async function appleLookupByKey(
   const url = new URL("/lookup", APPLE_BASE);
   url.searchParams.set(key, value);
   url.searchParams.set("country", defaultCountry(c));
-  url.searchParams.set("limit", `${limit(c, 50, 200)}`);
+  url.searchParams.set("limit", `${limit(c, 200, 200)}`);
   if (entity) {
     url.searchParams.set("entity", entity);
   }

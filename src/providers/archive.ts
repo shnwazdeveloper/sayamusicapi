@@ -39,7 +39,7 @@ function archiveIdentifier(c: ApiContext) {
 export async function archiveAdvanced(c: ApiContext, query?: string) {
   const url = new URL("/advancedsearch.php", ARCHIVE_BASE);
   url.searchParams.set("q", query || requiredQuery(c));
-  url.searchParams.set("rows", `${limit(c, 10, 100)}`);
+  url.searchParams.set("rows", `${limit(c, 1000, 1000)}`);
   url.searchParams.set("page", `${page(c)}`);
   url.searchParams.set("output", "json");
   url.searchParams.set("sort[]", c.req.query("sort") || "downloads desc");

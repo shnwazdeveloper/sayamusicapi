@@ -7,6 +7,8 @@ This project intentionally does not scrape unauthorized song files or bypass cop
 ## Features
 
 - 100+ GET endpoints across Apple/iTunes, MusicBrainz, Cover Art Archive, Internet Archive, and Audius.
+- Landing page at `/` and documentation page at `/docs`.
+- No API-side quotas, API keys, paid tiers, or gateway rate limits added by SayaMusicAPI.
 - Cloudflare Workers deployment with Wrangler.
 - CORS enabled for public apps.
 - Built-in `/v1/endpoints` registry and `/v1/openapi.json`.
@@ -28,11 +30,13 @@ http://localhost:8787
 Example calls:
 
 ```bash
-curl "http://localhost:8787/v1/search/tracks?q=alan%20walker&limit=5"
-curl "http://localhost:8787/v1/apple/search/songs?q=believer&limit=5"
-curl "http://localhost:8787/v1/musicbrainz/search/recordings?q=dua%20lipa&limit=5"
-curl "http://localhost:8787/v1/archive/search/music?q=jazz&limit=5"
+curl "http://localhost:8787/v1/search/tracks?q=alan%20walker"
+curl "http://localhost:8787/v1/apple/search/songs?q=believer"
+curl "http://localhost:8787/v1/musicbrainz/search/recordings?q=dua%20lipa"
+curl "http://localhost:8787/v1/archive/search/music?q=jazz"
 ```
+
+You can omit `limit` or use `limit=all`. SayaMusicAPI will use the upstream provider's public maximum page size when that provider requires one.
 
 ## Cloudflare Deploy
 
