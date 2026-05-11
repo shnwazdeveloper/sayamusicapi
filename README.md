@@ -6,7 +6,7 @@ This project intentionally does not scrape unauthorized song files or bypass cop
 
 ## Features
 
-- 100+ GET endpoints across Apple/iTunes, MusicBrainz, Cover Art Archive, Internet Archive, and Audius.
+- 900+ GET endpoints across Apple/iTunes, MusicBrainz, Cover Art Archive, Internet Archive, Audius, Deezer, Radio Browser, Openverse, Wikidata, Wikimedia, ListenBrainz, GitHub, and Odesli.
 - Landing page at `/` and documentation page at `/docs`.
 - No API-side quotas, API keys, paid tiers, or gateway rate limits added by SayaMusicAPI.
 - Cloudflare Workers deployment with Wrangler.
@@ -32,6 +32,9 @@ Example calls:
 ```bash
 curl "http://localhost:8787/v1/search/tracks?q=alan%20walker"
 curl "http://localhost:8787/v1/apple/search/songs?q=believer"
+curl "http://localhost:8787/v1/deezer/search/tracks?q=believer"
+curl "http://localhost:8787/v1/openverse/search/audio?q=piano"
+curl "http://localhost:8787/v1/radio-browser/stations/search?q=lofi"
 curl "http://localhost:8787/v1/musicbrainz/search/recordings?q=dua%20lipa"
 curl "http://localhost:8787/v1/archive/search/music?q=jazz"
 ```
@@ -70,6 +73,13 @@ GET /v1/media/artwork?provider=cover-art&release=...
 - Cover Art Archive: release and release-group cover art.
 - Internet Archive: public/free item metadata and file links. Check item license metadata before reuse.
 - Audius: open music catalog and stream resolution. An API token is recommended for reliable higher-rate use.
+- Deezer: public metadata, chart, artwork, and preview clip routes.
+- Radio Browser: public radio station metadata and stream URLs.
+- Openverse: openly licensed audio and image discovery.
+- Wikidata/Wikimedia: open knowledge search, page summaries, and entity metadata.
+- ListenBrainz: public music stats and metadata lookup.
+- GitHub: public repository discovery for music/API/source references.
+- Odesli: cross-platform smart links for song, album, and podcast URLs.
 
 ## Tests
 

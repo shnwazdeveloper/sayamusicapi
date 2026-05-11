@@ -22,6 +22,30 @@ function endpointRows(items: EndpointDoc[]) {
     .join("");
 }
 
+function providerCount() {
+  return new Set(endpoints.map((endpoint) => endpoint.provider)).size;
+}
+
+const sourceNames = [
+  "Apple/iTunes",
+  "MusicBrainz",
+  "Cover Art Archive",
+  "Internet Archive",
+  "Audius",
+  "Deezer",
+  "Radio Browser",
+  "Openverse",
+  "Wikidata",
+  "Wikimedia",
+  "ListenBrainz",
+  "GitHub",
+  "Odesli"
+];
+
+function sourcePills() {
+  return sourceNames.map((source) => `<span>${escapeHtml(source)}</span>`).join("");
+}
+
 function endpointGroups() {
   const groups = new Map<string, EndpointDoc[]>();
   for (const endpoint of endpoints) {
@@ -92,10 +116,17 @@ export function landingPage(origin: string) {
             <p class="lede">
               Legal music search, metadata, artwork, previews, and open/free stream resolution from public provider APIs.
             </p>
-            <div class="actions">
+          <div class="actions">
               <a class="button primary" href="/docs">Open docs</a>
               <a class="button" href="/v1/endpoints">View endpoints</a>
             </div>
+            <form class="api-form" action="/v1/search/tracks" method="get">
+              <label for="hero-q">Try a search</label>
+              <div>
+                <input id="hero-q" name="q" value="believer" autocomplete="off">
+                <button type="submit">Run</button>
+              </div>
+            </form>
           </div>
           <aside class="console-panel" aria-label="API example">
             <div class="console-head">
@@ -123,30 +154,36 @@ export function landingPage(origin: string) {
             <p>documented API endpoints</p>
           </div>
           <div>
-            <span>0</span>
-            <p>API-side quotas or paid tiers</p>
+            <span>Free</span>
+            <p>no API-side quotas, keys, or paid tiers</p>
           </div>
           <div>
-            <span>5</span>
-            <p>public music data sources</p>
+            <span>${sourceNames.length}</span>
+            <p>public source groups</p>
           </div>
         </section>
 
         <section class="provider-strip" aria-label="Providers">
           <div class="ticker">
-            <span>Apple/iTunes</span>
-            <span>MusicBrainz</span>
-            <span>Cover Art Archive</span>
-            <span>Internet Archive</span>
-            <span>Audius</span>
-            <span>Cloudflare Workers</span>
+            ${sourcePills()}
+            ${sourcePills()}
+          </div>
+        </section>
+
+        <section class="source-cloud" aria-label="Source map">
+          <div>
+            <p class="eyebrow">Source mesh</p>
+            <h2>More legal web sources, one response shape.</h2>
+          </div>
+          <div class="source-list">
+            ${sourceNames.map((source, index) => `<span style="--i:${index}">${escapeHtml(source)}</span>`).join("")}
           </div>
         </section>
 
         <section class="section-grid">
           <article>
             <h2>Search Surface</h2>
-            <p>Aggregate search plus direct provider routes for tracks, albums, artists, videos, podcasts, audiobooks, releases, recordings, and public archive media.</p>
+            <p>Aggregate search plus direct provider routes for tracks, albums, artists, videos, podcasts, audiobooks, releases, recordings, public radio, open audio, and source discovery.</p>
           </article>
           <article>
             <h2>Media Policy</h2>
@@ -164,8 +201,9 @@ export function landingPage(origin: string) {
 
 export function docsPage(origin: string) {
   const appleExample = `${origin}/v1/apple/search/songs?q=believer`;
-  const previewExample = `${origin}/v1/media/preview?q=believer`;
-  const archiveExample = `${origin}/v1/archive/search/music?q=jazz`;
+  const deezerExample = `${origin}/v1/deezer/search/tracks?q=believer`;
+  const openverseExample = `${origin}/v1/openverse/search/audio?q=piano`;
+  const diagnosticsExample = `${origin}/v1/diagnostics/routes`;
 
   return `<!doctype html>
   <html lang="en">
@@ -182,6 +220,7 @@ export function docsPage(origin: string) {
           <a href="#start">Start</a>
           <a href="#policy">Limits</a>
           <a href="#providers">Providers</a>
+          <a href="#diagnostics">Diagnostics</a>
           <a href="#examples">Examples</a>
           <a href="#endpoints">Endpoints</a>
         </aside>
@@ -191,8 +230,11 @@ export function docsPage(origin: string) {
             <p class="eyebrow">Documentation</p>
             <h1>${endpointCount} endpoint music API</h1>
             <p>
-              Use the public hosted Worker or deploy your own copy. JSON endpoints live under <code>/v1</code>; the homepage and this docs page are the UI layer.
+              Use the public hosted Worker or deploy your own copy. JSON endpoints live under <code>/v1</code>; the homepage and this docs page are the UI layer. The registry now publishes <strong>${endpointCount}</strong> routes across <strong>${providerCount()}</strong> provider groups.
             </p>
+            <div class="route-flow" aria-hidden="true">
+              <span></span><span></span><span></span><span></span><span></span>
+            </div>
           </header>
 
           <section class="doc-section" id="policy">
@@ -206,9 +248,25 @@ export function docsPage(origin: string) {
           </section>
 
           <section class="doc-section" id="providers">
-            <h2>Provider Groups</h2>
+            <div class="section-heading">
+              <h2>Provider Groups</h2>
+              <a class="button compact" href="/v1/sources">Source JSON</a>
+            </div>
             <div class="provider-grid">
               ${endpointGroups()}
+            </div>
+          </section>
+
+          <section class="doc-section" id="diagnostics">
+            <h2>Alive and Diagnostics</h2>
+            <p>
+              The API exposes simple alive routes plus route/source diagnostics. These are fast checks for uptime monitors and for confirming that the deployed endpoint registry is healthy.
+            </p>
+            <div class="diagnostic-links">
+              <a href="/alive">/alive</a>
+              <a href="/v1/status">/v1/status</a>
+              <a href="/v1/diagnostics">/v1/diagnostics</a>
+              <a href="/v1/diagnostics/routes">/v1/diagnostics/routes</a>
             </div>
           </section>
 
@@ -216,8 +274,9 @@ export function docsPage(origin: string) {
             <h2>Examples</h2>
             <div class="code-grid">
               <pre><code>curl "${escapeHtml(appleExample)}"</code></pre>
-              <pre><code>curl "${escapeHtml(previewExample)}"</code></pre>
-              <pre><code>curl "${escapeHtml(archiveExample)}"</code></pre>
+              <pre><code>curl "${escapeHtml(deezerExample)}"</code></pre>
+              <pre><code>curl "${escapeHtml(openverseExample)}"</code></pre>
+              <pre><code>curl "${escapeHtml(diagnosticsExample)}"</code></pre>
             </div>
           </section>
 
@@ -401,6 +460,52 @@ h1 {
   margin-top: 32px;
 }
 
+.api-form {
+  display: grid;
+  gap: 10px;
+  max-width: 520px;
+  margin-top: 28px;
+}
+
+.api-form label {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.api-form div {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  border: 1px solid var(--black);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--panel);
+}
+
+.api-form input,
+.api-form button {
+  min-height: 48px;
+  border: 0;
+  font: inherit;
+}
+
+.api-form input {
+  min-width: 0;
+  padding: 0 14px;
+  background: var(--panel);
+}
+
+.api-form button {
+  padding: 0 18px;
+  color: #fff;
+  background: var(--green);
+  cursor: pointer;
+}
+
+.api-form button:hover {
+  background: var(--black);
+}
+
 .console-panel {
   border: 1px solid var(--black);
   border-radius: 8px;
@@ -511,6 +616,47 @@ h1 {
   white-space: nowrap;
 }
 
+.source-cloud {
+  display: grid;
+  grid-template-columns: minmax(240px, 0.7fr) 1.3fr;
+  gap: 24px;
+  padding: 56px 6vw;
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+}
+
+.source-cloud h2 {
+  margin: 0;
+  max-width: 620px;
+  font-size: clamp(32px, 4vw, 58px);
+  line-height: 1;
+}
+
+.source-list {
+  display: flex;
+  align-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.source-list span {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 11px 14px;
+  background: #f8f1e3;
+  animation: sourceStep 3.6s ease-in-out infinite alternate;
+  animation-delay: calc(var(--i) * 70ms);
+}
+
+.source-list span:nth-child(3n) {
+  background: #e8f2ef;
+}
+
+.source-list span:nth-child(3n + 1) {
+  background: #f6e9e6;
+}
+
 .section-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -578,6 +724,27 @@ h1 {
   line-height: 1;
 }
 
+.route-flow {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  margin-top: 24px;
+}
+
+.route-flow span {
+  height: 8px;
+  border-radius: 8px;
+  background: var(--line);
+  transform-origin: left center;
+  animation: routeFlow 1.6s ease-in-out infinite alternate;
+}
+
+.route-flow span:nth-child(1) { background: var(--green); }
+.route-flow span:nth-child(2) { background: var(--gold); animation-delay: 80ms; }
+.route-flow span:nth-child(3) { background: var(--coral); animation-delay: 160ms; }
+.route-flow span:nth-child(4) { background: var(--blue); animation-delay: 240ms; }
+.route-flow span:nth-child(5) { background: var(--black); animation-delay: 320ms; }
+
 .notice {
   margin-top: 16px;
   padding: 14px 16px;
@@ -615,6 +782,27 @@ h1 {
 
 .provider-name {
   font-weight: 800;
+}
+
+.diagnostic-links {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.diagnostic-links a {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px 14px;
+  background: #eef1ed;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  transition: transform 180ms ease, border-color 180ms ease;
+}
+
+.diagnostic-links a:hover {
+  transform: translateY(-2px);
+  border-color: var(--black);
 }
 
 .code-grid {
@@ -698,11 +886,22 @@ th {
   to { transform: translateX(-50%); }
 }
 
+@keyframes sourceStep {
+  from { transform: translateY(0); }
+  to { transform: translateY(-8px); }
+}
+
+@keyframes routeFlow {
+  from { transform: scaleX(0.35); }
+  to { transform: scaleX(1); }
+}
+
 @media (max-width: 860px) {
   .topbar,
   .hero,
   .section-grid,
-  .docs-shell {
+  .docs-shell,
+  .source-cloud {
     padding-left: 20px;
     padding-right: 20px;
   }
@@ -717,6 +916,7 @@ th {
   .hero,
   .section-grid,
   .docs-shell,
+  .source-cloud,
   .stats-band {
     grid-template-columns: 1fr;
   }

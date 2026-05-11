@@ -18,5 +18,13 @@ export type ProviderName =
   | "musicbrainz"
   | "cover-art"
   | "archive"
-  | "audius";
-
+  | "audius"
+  | "deezer"
+  | "radio-browser"
+  | "openverse"
+  | "wikidata"
+  | "wikimedia"
+  | "listenbrainz"
+  | "github"
+  | "odesli"
+  | "web";

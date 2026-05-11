@@ -10,12 +10,24 @@ export type EndpointDoc = {
 
 const core: EndpointDoc[] = [
   ["GET", "/", "core", "API welcome and quick links"],
+  ["GET", "/docs", "core", "Human-readable documentation"],
+  ["GET", "/site.css", "core", "Website stylesheet"],
   ["GET", "/health", "core", "Health check"],
+  ["GET", "/alive", "core", "Alive check"],
+  ["GET", "/ping", "core", "Ping check"],
+  ["GET", "/status", "core", "Status check"],
   ["GET", "/version", "core", "Version and build metadata"],
   ["GET", "/v1", "core", "Versioned API welcome"],
+  ["GET", "/v1/alive", "core", "Versioned alive check"],
+  ["GET", "/v1/ping", "core", "Versioned ping check"],
+  ["GET", "/v1/status", "core", "Versioned status check"],
   ["GET", "/v1/providers", "core", "Available providers"],
   ["GET", "/v1/endpoints", "core", "Endpoint registry"],
   ["GET", "/v1/openapi.json", "core", "OpenAPI document"],
+  ["GET", "/v1/diagnostics", "core", "Runtime diagnostics"],
+  ["GET", "/v1/diagnostics/routes", "core", "Route registry diagnostics"],
+  ["GET", "/v1/diagnostics/sources", "core", "Provider source diagnostics"],
+  ["GET", "/v1/diagnostics/live", "core", "Live upstream smoke-test guide"],
   ["GET", "/v1/quality", "core", "Quality tiers and legal media policy"],
   ["GET", "/v1/legal", "core", "Legal usage notes"],
   ["GET", "/v1/sources", "core", "Upstream provider source notes"]
@@ -185,6 +197,250 @@ const audius: EndpointDoc[] = [
   query: ["q", "limit", "genre", "time", "redirect"]
 })) as EndpointDoc[];
 
+function endpoint(
+  provider: ProviderName,
+  path: string,
+  summary: string,
+  query: string[] = ["q", "limit"]
+): EndpointDoc {
+  return {
+    method: "GET",
+    path,
+    provider,
+    summary,
+    query
+  };
+}
+
+const deezerResources = [
+  "all",
+  "tracks",
+  "songs",
+  "albums",
+  "artists",
+  "playlists",
+  "podcasts",
+  "radios",
+  "users"
+];
+const deezerModes = [
+  "by-title",
+  "by-artist",
+  "by-album",
+  "by-isrc",
+  "by-upc",
+  "by-genre",
+  "by-label",
+  "by-year",
+  "by-duration",
+  "by-keyword"
+];
+const deezerSearchEndpoints = deezerResources.flatMap((resource) => [
+  endpoint("deezer", `/v1/deezer/search/${resource}`, `Deezer ${resource} search`),
+  ...deezerModes.map((mode) =>
+    endpoint("deezer", `/v1/deezer/search/${resource}/${mode}`, `Deezer ${resource} search ${mode}`)
+  )
+]);
+const deezerLookups = [
+  "tracks",
+  "albums",
+  "artists",
+  "playlists",
+  "genres",
+  "radios",
+  "podcasts",
+  "editorials",
+  "users"
+].flatMap((resource) => [
+  endpoint("deezer", `/v1/deezer/${resource}/:id`, `Deezer ${resource} lookup`, ["id"]),
+  endpoint("deezer", `/v1/deezer/${resource}/:id/tracks`, `Deezer ${resource} tracks`, ["id", "limit"]),
+  endpoint("deezer", `/v1/deezer/${resource}/:id/albums`, `Deezer ${resource} albums`, ["id", "limit"]),
+  endpoint("deezer", `/v1/deezer/${resource}/:id/artists`, `Deezer ${resource} artists`, ["id", "limit"])
+]);
+const deezer = [
+  ...deezerSearchEndpoints,
+  ...deezerLookups,
+  endpoint("deezer", "/v1/deezer/chart", "Deezer global chart", ["limit"]),
+  endpoint("deezer", "/v1/deezer/chart/:id", "Deezer chart by country/genre ID", ["id", "limit"]),
+  ...["tracks", "albums", "artists", "playlists", "podcasts"].map((connection) =>
+    endpoint("deezer", `/v1/deezer/chart/:id/${connection}`, `Deezer chart ${connection}`, ["id", "limit"])
+  )
+];
+
+const radioSelectors = [
+  "search",
+  "by-name",
+  "by-name-exact",
+  "by-country",
+  "by-country-exact",
+  "by-country-code",
+  "by-state",
+  "by-state-exact",
+  "by-language",
+  "by-language-exact",
+  "by-tag",
+  "by-tag-exact",
+  "by-codec",
+  "by-codec-exact",
+  "by-uuid",
+  "top-vote",
+  "top-click",
+  "last-click",
+  "last-change"
+];
+const radioBrowser = [
+  ...radioSelectors.map((selector) =>
+    endpoint("radio-browser", `/v1/radio-browser/stations/${selector}`, `Radio Browser stations ${selector}`)
+  ),
+  ...["countries", "countrycodes", "codecs", "states", "languages", "tags"].map((list) =>
+    endpoint("radio-browser", `/v1/radio-browser/lists/${list}`, `Radio Browser ${list} list`, [])
+  ),
+  endpoint("radio-browser", "/v1/radio-browser/url/:uuid", "Radio Browser stream click URL", ["uuid"])
+];
+
+const openverseMedia = ["audio", "images"];
+const openverseModes = [
+  "by-title",
+  "by-creator",
+  "by-tag",
+  "by-source",
+  "by-license",
+  "by-category",
+  "by-extension",
+  "by-length",
+  "safe",
+  "public-domain",
+  "commercial",
+  "remixable"
+];
+const openverse = [
+  ...openverseMedia.flatMap((media) => [
+    endpoint("openverse", `/v1/openverse/search/${media}`, `Openverse ${media} search`),
+    ...openverseModes.map((mode) =>
+      endpoint("openverse", `/v1/openverse/search/${media}/${mode}`, `Openverse ${media} search ${mode}`)
+    ),
+    endpoint("openverse", `/v1/openverse/${media}/:id`, `Openverse ${media} lookup`, ["id"]),
+    endpoint("openverse", `/v1/openverse/${media}/sources`, `Openverse ${media} sources`, []),
+    endpoint("openverse", `/v1/openverse/${media}/stats`, `Openverse ${media} stats`, [])
+  ])
+];
+
+const wikidataTypes = ["items", "properties", "songs", "albums", "artists", "genres", "labels", "works"];
+const wikidataModes = [
+  "music",
+  "recording",
+  "release",
+  "artist",
+  "album",
+  "composer",
+  "label",
+  "genre",
+  "instrument",
+  "event"
+];
+const wikidata = [
+  ...wikidataTypes.flatMap((type) => [
+    endpoint("wikidata", `/v1/wikidata/search/${type}`, `Wikidata ${type} search`),
+    ...wikidataModes.map((mode) =>
+      endpoint("wikidata", `/v1/wikidata/search/${type}/${mode}`, `Wikidata ${type} search ${mode}`)
+    )
+  ]),
+  endpoint("wikidata", "/v1/wikidata/entities/:ids", "Wikidata entity lookup", ["ids"]),
+  endpoint("wikidata", "/v1/wikidata/claims/:id", "Wikidata claims lookup", ["id", "property"])
+];
+
+const wikimediaProjects = [
+  "wikipedia",
+  "commons",
+  "wikibooks",
+  "wikiquote",
+  "wikinews",
+  "wikiversity",
+  "wiktionary",
+  "wikisource"
+];
+const wikimediaModes = ["music", "artist", "album", "song", "genre", "label"];
+const wikimedia = [
+  ...wikimediaProjects.flatMap((project) => [
+    endpoint("wikimedia", `/v1/wikimedia/search/${project}`, `Wikimedia ${project} search`),
+    ...wikimediaModes.map((mode) =>
+      endpoint("wikimedia", `/v1/wikimedia/search/${project}/${mode}`, `Wikimedia ${project} search ${mode}`)
+    ),
+    endpoint("wikimedia", `/v1/wikimedia/${project}/summary/:title`, `Wikimedia ${project} page summary`, ["title"])
+  ])
+];
+
+const listenBrainzEntities = ["recordings", "artists", "releases", "release-groups", "listening-activity"];
+const listenBrainzRanges = ["week", "month", "quarter", "year", "all_time"];
+const listenbrainz = [
+  ...listenBrainzEntities.flatMap((entityName) => [
+    endpoint("listenbrainz", `/v1/listenbrainz/stats/sitewide/${entityName}`, `ListenBrainz sitewide ${entityName}`, ["range"]),
+    ...listenBrainzRanges.map((range) =>
+      endpoint(
+        "listenbrainz",
+        `/v1/listenbrainz/stats/sitewide/${entityName}/${range}`,
+        `ListenBrainz sitewide ${entityName} ${range}`,
+        []
+      )
+    )
+  ]),
+  endpoint("listenbrainz", "/v1/listenbrainz/metadata/lookup", "ListenBrainz metadata lookup", [
+    "artist_name",
+    "recording_name",
+    "release_name"
+  ]),
+  endpoint("listenbrainz", "/v1/listenbrainz/popularity/:mbid/recordings", "ListenBrainz top recordings for artist", [
+    "mbid"
+  ]),
+  endpoint(
+    "listenbrainz",
+    "/v1/listenbrainz/popularity/:mbid/release-groups",
+    "ListenBrainz top release groups for artist",
+    ["mbid"]
+  )
+];
+
+const githubResources = ["repositories", "repos", "topics", "users", "issues", "commits"];
+const githubModes = ["music", "api", "worker", "javascript", "typescript", "cloudflare", "metadata", "audio"];
+const github = [
+  ...githubResources.flatMap((resource) => [
+    endpoint("github", `/v1/github/search/${resource}`, `GitHub ${resource} search`, ["q", "limit", "sort"]),
+    ...githubModes.map((mode) =>
+      endpoint("github", `/v1/github/search/${resource}/${mode}`, `GitHub ${resource} search ${mode}`, [
+        "q",
+        "limit",
+        "sort"
+      ])
+    )
+  ]),
+  ...["languages", "releases", "tags", "contributors", "contents", "topics"].map((connection) =>
+    endpoint("github", `/v1/github/repos/:owner/:repo/${connection}`, `GitHub repo ${connection}`, [
+      "owner",
+      "repo"
+    ])
+  ),
+  endpoint("github", "/v1/github/repos/:owner/:repo", "GitHub repo lookup", ["owner", "repo"])
+];
+
+const odesli = [
+  endpoint("odesli", "/v1/odesli/links", "Odesli smart-link resolver", ["url", "userCountry"]),
+  endpoint("odesli", "/v1/odesli/song", "Odesli song-link resolver", ["url", "userCountry"]),
+  endpoint("odesli", "/v1/odesli/album", "Odesli album-link resolver", ["url", "userCountry"]),
+  endpoint("odesli", "/v1/odesli/podcast", "Odesli podcast-link resolver", ["url", "userCountry"])
+];
+
+const webSources = ["deezer", "openverse", "wikidata", "wikimedia", "wikipedia", "commons", "github", "radio-browser"];
+const webResources = ["tracks", "albums", "artists", "playlists", "audio", "images", "repositories", "stations"];
+const webModes = ["quick", "deep", "metadata", "artwork", "preview"];
+const web = webSources.flatMap((source) =>
+  webResources.flatMap((resource) => [
+    endpoint("web", `/v1/web/${source}/search/${resource}`, `Unified web search via ${source} for ${resource}`),
+    ...webModes.map((mode) =>
+      endpoint("web", `/v1/web/${source}/search/${resource}/${mode}`, `Unified web search ${mode} via ${source}`)
+    )
+  ])
+);
+
 export const endpoints: EndpointDoc[] = [
   ...core,
   ...aggregate,
@@ -193,7 +449,16 @@ export const endpoints: EndpointDoc[] = [
   ...musicbrainzLookup,
   ...coverArt,
   ...archive,
-  ...audius
+  ...audius,
+  ...deezer,
+  ...radioBrowser,
+  ...openverse,
+  ...wikidata,
+  ...wikimedia,
+  ...listenbrainz,
+  ...github,
+  ...odesli,
+  ...web
 ];
 
 export const endpointCount = endpoints.length;
@@ -234,4 +499,3 @@ export function buildOpenApi(origin: string) {
     paths
   };
 }
-

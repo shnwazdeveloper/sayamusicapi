@@ -3,8 +3,8 @@ import app from "../src/index";
 import { endpointCount, endpoints } from "../src/endpoints";
 
 describe("SayaMusicAPI", () => {
-  it("publishes more than 60 endpoints", () => {
-    expect(endpointCount).toBeGreaterThanOrEqual(60);
+  it("publishes more than 300 endpoints", () => {
+    expect(endpointCount).toBeGreaterThanOrEqual(300);
     expect(endpoints.length).toBe(endpointCount);
   });
 
@@ -25,6 +25,11 @@ describe("SayaMusicAPI", () => {
     const docs = await app.request("/docs");
     expect(docs.status).toBe(200);
     expect(await docs.text()).toContain("Free Limit Policy");
+
+    const css = await app.request("/site.css");
+    const cssText = await css.text();
+    expect(cssText).not.toMatch(/glow|box-shadow|drop-shadow|text-shadow|filter:/i);
+    expect(cssText).toContain("@keyframes");
   });
 
   it("serves the endpoint registry", async () => {
@@ -33,6 +38,8 @@ describe("SayaMusicAPI", () => {
     const body = (await response.json()) as any;
     expect(body.count).toBe(endpointCount);
     expect(body.data.some((item: any) => item.path === "/v1/apple/search/songs")).toBe(true);
+    expect(body.data.some((item: any) => item.path === "/v1/deezer/search/tracks")).toBe(true);
+    expect(body.data.some((item: any) => item.path === "/v1/openverse/search/audio")).toBe(true);
   });
 
   it("validates required search query params", async () => {
@@ -41,5 +48,34 @@ describe("SayaMusicAPI", () => {
     const body = (await response.json()) as any;
     expect(body.ok).toBe(false);
     expect(body.error.message).toContain("Missing required query parameter");
+  });
+
+  it("serves alive and diagnostics routes", async () => {
+    const alive = await app.request("/alive");
+    expect(alive.status).toBe(200);
+    const aliveBody = (await alive.json()) as any;
+    expect(aliveBody.data.endpointCount).toBe(endpointCount);
+
+    const diagnostics = await app.request("/v1/diagnostics/routes");
+    expect(diagnostics.status).toBe(200);
+    const diagnosticsBody = (await diagnostics.json()) as any;
+    expect(diagnosticsBody.data.endpointCount).toBe(endpointCount);
+    expect(diagnosticsBody.data.providers.deezer).toBeGreaterThan(0);
+  });
+
+  it("routes new providers instead of falling through to 404", async () => {
+    const smokePaths = [
+      "/v1/deezer/search/tracks",
+      "/v1/openverse/search/audio",
+      "/v1/wikidata/search/items",
+      "/v1/listenbrainz/metadata/lookup",
+      "/v1/odesli/links",
+      "/v1/web/deezer/search/tracks"
+    ];
+
+    for (const path of smokePaths) {
+      const response = await app.request(path);
+      expect(response.status).not.toBe(404);
+    }
   });
 });

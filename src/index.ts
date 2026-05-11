@@ -53,6 +53,29 @@ import {
   mbSearch,
   mbSearchResources
 } from "./providers/musicbrainz";
+import {
+  deezerChart,
+  deezerLookup,
+  deezerSearch,
+  githubRepo,
+  githubSearch,
+  listenBrainzLookup,
+  listenBrainzPopularity,
+  listenBrainzStats,
+  odesliLinks,
+  openverseLookup,
+  openverseMeta,
+  openverseSearch,
+  radioBrowserClick,
+  radioBrowserList,
+  radioBrowserStations,
+  webSourceSearch,
+  wikidataClaims,
+  wikidataEntities,
+  wikidataSearch,
+  wikimediaSearch,
+  wikimediaSummary
+} from "./providers/extraSources";
 
 const app = new Hono<ApiBindings>();
 
@@ -112,8 +135,72 @@ const providers = [
     name: "Audius",
     features: ["open music search", "trending", "streams"],
     auth: "optional AUDIUS_API_KEY recommended"
+  },
+  {
+    id: "deezer",
+    name: "Deezer public API",
+    features: ["search", "metadata", "charts", "30-second previews", "artwork"],
+    auth: "none for public metadata routes"
+  },
+  {
+    id: "radio-browser",
+    name: "Radio Browser",
+    features: ["radio station search", "live stream URLs", "countries", "tags"],
+    auth: "none"
+  },
+  {
+    id: "openverse",
+    name: "Openverse",
+    features: ["openly licensed audio", "openly licensed images", "source filters"],
+    auth: "none"
+  },
+  {
+    id: "wikidata",
+    name: "Wikidata",
+    features: ["entity search", "entity lookup", "claims"],
+    auth: "none"
+  },
+  {
+    id: "wikimedia",
+    name: "Wikimedia",
+    features: ["Wikipedia search", "Commons search", "page summaries"],
+    auth: "none"
+  },
+  {
+    id: "listenbrainz",
+    name: "ListenBrainz",
+    features: ["sitewide stats", "metadata lookup", "artist popularity"],
+    auth: "none for public read routes"
+  },
+  {
+    id: "github",
+    name: "GitHub public REST API",
+    features: ["public music API repo discovery", "repo metadata", "releases"],
+    auth: "none for basic public read routes"
+  },
+  {
+    id: "odesli",
+    name: "Songlink/Odesli",
+    features: ["song smart links", "album smart links", "cross-platform URLs"],
+    auth: "none for basic link resolving"
   }
 ];
+
+function providerCounts() {
+  return endpoints.reduce<Record<string, number>>((counts, endpoint) => {
+    counts[endpoint.provider] = (counts[endpoint.provider] || 0) + 1;
+    return counts;
+  }, {});
+}
+
+function alive() {
+  return {
+    status: "alive",
+    version: "0.1.0",
+    endpointCount,
+    checkedAt: new Date().toISOString()
+  };
+}
 
 function welcome(origin: string) {
   return {
@@ -143,6 +230,9 @@ app.get("/site.css", (c) =>
     "Cache-Control": "public, max-age=3600"
   })
 );
+app.get("/alive", (c) => jsonOk(c, alive()));
+app.get("/ping", (c) => jsonOk(c, { pong: true, ...alive() }));
+app.get("/status", (c) => jsonOk(c, alive()));
 app.get("/health", (c) =>
   jsonOk(c, {
     status: "ok",
@@ -158,9 +248,51 @@ app.get("/version", (c) =>
   })
 );
 app.get("/v1", (c) => jsonOk(c, welcome(new URL(c.req.url).origin)));
+app.get("/v1/alive", (c) => jsonOk(c, alive()));
+app.get("/v1/ping", (c) => jsonOk(c, { pong: true, ...alive() }));
+app.get("/v1/status", (c) => jsonOk(c, alive()));
 app.get("/v1/providers", (c) => jsonOk(c, providers));
 app.get("/v1/endpoints", (c) => jsonOk(c, endpoints, { count: endpointCount }));
 app.get("/v1/openapi.json", (c) => c.json(buildOpenApi(new URL(c.req.url).origin)));
+app.get("/v1/diagnostics", (c) =>
+  jsonOk(c, {
+    status: "ready",
+    endpointCount,
+    providerCounts: providerCounts(),
+    docs: "/docs",
+    routes: "/v1/diagnostics/routes",
+    sources: "/v1/diagnostics/sources"
+  })
+);
+app.get("/v1/diagnostics/routes", (c) =>
+  jsonOk(c, {
+    endpointCount,
+    providers: providerCounts(),
+    sample: endpoints.slice(0, 25),
+    note:
+      "This confirms the published registry. Live provider availability depends on each upstream public API."
+  })
+);
+app.get("/v1/diagnostics/sources", (c) =>
+  jsonOk(c, {
+    providers,
+    legal:
+      "Sources are public metadata, previews, open streams, openly licensed media, and public repository discovery."
+  })
+);
+app.get("/v1/diagnostics/live", (c) =>
+  jsonOk(c, {
+    message: "Use these URLs for low-cost live smoke tests.",
+    checks: [
+      "/health",
+      "/v1/deezer/search/tracks?q=believer",
+      "/v1/radio-browser/stations/search?q=lofi",
+      "/v1/openverse/search/audio?q=piano",
+      "/v1/wikidata/search/items?q=dua%20lipa",
+      "/v1/github/search/repositories?q=music%20api"
+    ]
+  })
+);
 app.get("/v1/quality", (c) =>
   jsonOk(c, {
     policy:
@@ -205,8 +337,113 @@ app.get("/v1/sources", (c) =>
     archive:
       "Internet Archive advanced search and metadata APIs for public/free media files.",
     audius:
-      "Audius REST API for open music catalog search and stream resolution. AUDIUS_API_KEY is recommended."
+      "Audius REST API for open music catalog search and stream resolution. AUDIUS_API_KEY is recommended.",
+    deezer:
+      "Deezer public API for metadata, charts, artwork, and preview clips.",
+    radioBrowser:
+      "Radio Browser for public radio station metadata and stream URLs.",
+    openverse:
+      "Openverse for openly licensed audio and image discovery.",
+    wikidata:
+      "Wikidata and Wikimedia APIs for open knowledge and contextual music metadata.",
+    listenbrainz:
+      "ListenBrainz public read APIs for sitewide music stats and metadata lookup.",
+    github:
+      "GitHub public REST API for discovering public music API repositories and source references.",
+    odesli:
+      "Odesli/Songlink for resolving cross-platform music smart links."
   })
+);
+
+app.get("/v1/deezer/search/:resource", (c) =>
+  jsonOk(c, deezerSearch(c, requiredParam(c, "resource")))
+);
+app.get("/v1/deezer/search/:resource/:mode", (c) =>
+  jsonOk(c, deezerSearch(c, requiredParam(c, "resource")))
+);
+app.get("/v1/deezer/chart", (c) => jsonOk(c, deezerChart(c)));
+app.get("/v1/deezer/chart/:id", (c) => jsonOk(c, deezerChart(c)));
+app.get("/v1/deezer/chart/:id/:connection", (c) => jsonOk(c, deezerChart(c)));
+app.get("/v1/deezer/:resource/:id", (c) =>
+  jsonOk(c, deezerLookup(c, requiredParam(c, "resource")))
+);
+app.get("/v1/deezer/:resource/:id/:connection", (c) =>
+  jsonOk(c, deezerLookup(c, requiredParam(c, "resource")))
+);
+
+app.get("/v1/radio-browser/stations/:selector", (c) =>
+  jsonOk(c, radioBrowserStations(c, requiredParam(c, "selector")))
+);
+app.get("/v1/radio-browser/lists/:list", (c) =>
+  jsonOk(c, radioBrowserList(c, requiredParam(c, "list")))
+);
+app.get("/v1/radio-browser/url/:uuid", (c) => jsonOk(c, radioBrowserClick(c)));
+
+app.get("/v1/openverse/search/:media", (c) =>
+  jsonOk(c, openverseSearch(c, requiredParam(c, "media")))
+);
+app.get("/v1/openverse/search/:media/:mode", (c) =>
+  jsonOk(c, openverseSearch(c, requiredParam(c, "media")))
+);
+app.get("/v1/openverse/:media/sources", (c) =>
+  jsonOk(c, openverseMeta(c, requiredParam(c, "media"), "sources"))
+);
+app.get("/v1/openverse/:media/stats", (c) =>
+  jsonOk(c, openverseMeta(c, requiredParam(c, "media"), "stats"))
+);
+app.get("/v1/openverse/:media/:id", (c) =>
+  jsonOk(c, openverseLookup(c, requiredParam(c, "media")))
+);
+
+app.get("/v1/wikidata/search/:type", (c) =>
+  jsonOk(c, wikidataSearch(c, requiredParam(c, "type")))
+);
+app.get("/v1/wikidata/search/:type/:mode", (c) =>
+  jsonOk(c, wikidataSearch(c, requiredParam(c, "type")))
+);
+app.get("/v1/wikidata/entities/:ids", (c) => jsonOk(c, wikidataEntities(c)));
+app.get("/v1/wikidata/claims/:id", (c) => jsonOk(c, wikidataClaims(c)));
+
+app.get("/v1/wikimedia/search/:project", (c) =>
+  jsonOk(c, wikimediaSearch(c, requiredParam(c, "project")))
+);
+app.get("/v1/wikimedia/search/:project/:mode", (c) =>
+  jsonOk(c, wikimediaSearch(c, requiredParam(c, "project")))
+);
+app.get("/v1/wikimedia/:project/summary/:title", (c) =>
+  jsonOk(c, wikimediaSummary(c, requiredParam(c, "project")))
+);
+
+app.get("/v1/listenbrainz/stats/sitewide/:entity", (c) =>
+  jsonOk(c, listenBrainzStats(c, requiredParam(c, "entity")))
+);
+app.get("/v1/listenbrainz/stats/sitewide/:entity/:range", (c) =>
+  jsonOk(c, listenBrainzStats(c, requiredParam(c, "entity"), requiredParam(c, "range")))
+);
+app.get("/v1/listenbrainz/metadata/lookup", (c) => jsonOk(c, listenBrainzLookup(c)));
+app.get("/v1/listenbrainz/popularity/:mbid/:resource", (c) =>
+  jsonOk(c, listenBrainzPopularity(c, requiredParam(c, "resource")))
+);
+
+app.get("/v1/github/search/:resource", (c) =>
+  jsonOk(c, githubSearch(c, requiredParam(c, "resource")))
+);
+app.get("/v1/github/search/:resource/:mode", (c) =>
+  jsonOk(c, githubSearch(c, requiredParam(c, "resource")))
+);
+app.get("/v1/github/repos/:owner/:repo", (c) => jsonOk(c, githubRepo(c)));
+app.get("/v1/github/repos/:owner/:repo/:connection", (c) => jsonOk(c, githubRepo(c)));
+
+app.get("/v1/odesli/links", (c) => jsonOk(c, odesliLinks(c)));
+app.get("/v1/odesli/song", (c) => jsonOk(c, odesliLinks(c)));
+app.get("/v1/odesli/album", (c) => jsonOk(c, odesliLinks(c)));
+app.get("/v1/odesli/podcast", (c) => jsonOk(c, odesliLinks(c)));
+
+app.get("/v1/web/:source/search/:resource", (c) =>
+  jsonOk(c, webSourceSearch(c, requiredParam(c, "source"), requiredParam(c, "resource")))
+);
+app.get("/v1/web/:source/search/:resource/:mode", (c) =>
+  jsonOk(c, webSourceSearch(c, requiredParam(c, "source"), requiredParam(c, "resource")))
 );
 
 app.get("/v1/search", (c) => jsonOk(c, aggregateSearch(c, "tracks")));
