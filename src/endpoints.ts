@@ -60,7 +60,7 @@ const aggregate: EndpointDoc[] = [
   path,
   provider: "aggregate",
   summary,
-  query: ["q", "limit", "country"]
+  query: ["q", "country"]
 })) as EndpointDoc[];
 
 const apple: EndpointDoc[] = [
@@ -86,7 +86,7 @@ const apple: EndpointDoc[] = [
   path,
   provider: "apple",
   summary,
-  query: ["q", "limit", "country", "offset"]
+  query: ["q", "country", "offset"]
 })) as EndpointDoc[];
 
 const musicbrainzSearch = [
@@ -109,7 +109,7 @@ const musicbrainzSearch = [
   path: `/v1/musicbrainz/search/${resource}`,
   provider: "musicbrainz",
   summary: `MusicBrainz ${resource} search`,
-  query: ["q", "limit", "offset"]
+  query: ["q", "offset"]
 })) as EndpointDoc[];
 
 const musicbrainzLookup = [
@@ -138,7 +138,7 @@ const musicbrainzLookup = [
     : `/v1/musicbrainz/${path}/:id`,
   provider: "musicbrainz",
   summary: `MusicBrainz ${summary}`,
-  query: ["inc", "limit", "offset"]
+  query: ["inc", "offset"]
 })) as EndpointDoc[];
 
 const coverArt: EndpointDoc[] = [
@@ -173,7 +173,7 @@ const archive: EndpointDoc[] = [
   path,
   provider: "archive",
   summary,
-  query: ["q", "limit", "page", "file", "redirect"]
+  query: ["q", "page", "file", "redirect"]
 })) as EndpointDoc[];
 
 const audius: EndpointDoc[] = [
@@ -194,14 +194,14 @@ const audius: EndpointDoc[] = [
   path,
   provider: "audius",
   summary,
-  query: ["q", "limit", "genre", "time", "redirect"]
+  query: ["q", "genre", "time", "redirect"]
 })) as EndpointDoc[];
 
 function endpoint(
   provider: ProviderName,
   path: string,
   summary: string,
-  query: string[] = ["q", "limit"]
+  query: string[] = ["q"]
 ): EndpointDoc {
   return {
     method: "GET",
@@ -253,17 +253,17 @@ const deezerLookups = [
   "users"
 ].flatMap((resource) => [
   endpoint("deezer", `/v1/deezer/${resource}/:id`, `Deezer ${resource} lookup`, ["id"]),
-  endpoint("deezer", `/v1/deezer/${resource}/:id/tracks`, `Deezer ${resource} tracks`, ["id", "limit"]),
-  endpoint("deezer", `/v1/deezer/${resource}/:id/albums`, `Deezer ${resource} albums`, ["id", "limit"]),
-  endpoint("deezer", `/v1/deezer/${resource}/:id/artists`, `Deezer ${resource} artists`, ["id", "limit"])
+  endpoint("deezer", `/v1/deezer/${resource}/:id/tracks`, `Deezer ${resource} tracks`, ["id"]),
+  endpoint("deezer", `/v1/deezer/${resource}/:id/albums`, `Deezer ${resource} albums`, ["id"]),
+  endpoint("deezer", `/v1/deezer/${resource}/:id/artists`, `Deezer ${resource} artists`, ["id"])
 ]);
 const deezer = [
   ...deezerSearchEndpoints,
   ...deezerLookups,
-  endpoint("deezer", "/v1/deezer/chart", "Deezer global chart", ["limit"]),
-  endpoint("deezer", "/v1/deezer/chart/:id", "Deezer chart by country/genre ID", ["id", "limit"]),
+  endpoint("deezer", "/v1/deezer/chart", "Deezer global chart", []),
+  endpoint("deezer", "/v1/deezer/chart/:id", "Deezer chart by country/genre ID", ["id"]),
   ...["tracks", "albums", "artists", "playlists", "podcasts"].map((connection) =>
-    endpoint("deezer", `/v1/deezer/chart/:id/${connection}`, `Deezer chart ${connection}`, ["id", "limit"])
+    endpoint("deezer", `/v1/deezer/chart/:id/${connection}`, `Deezer chart ${connection}`, ["id"])
   )
 ];
 
@@ -404,11 +404,10 @@ const githubResources = ["repositories", "repos", "topics", "users", "issues", "
 const githubModes = ["music", "api", "worker", "javascript", "typescript", "cloudflare", "metadata", "audio"];
 const github = [
   ...githubResources.flatMap((resource) => [
-    endpoint("github", `/v1/github/search/${resource}`, `GitHub ${resource} search`, ["q", "limit", "sort"]),
+    endpoint("github", `/v1/github/search/${resource}`, `GitHub ${resource} search`, ["q", "sort"]),
     ...githubModes.map((mode) =>
       endpoint("github", `/v1/github/search/${resource}/${mode}`, `GitHub ${resource} search ${mode}`, [
         "q",
-        "limit",
         "sort"
       ])
     )

@@ -1,5 +1,5 @@
 import type { ApiContext } from "../http";
-import { encodedPath, fetchJson, limit, page, requiredParam, requiredQuery, yes } from "../http";
+import { applyLimit, encodedPath, fetchJson, page, requiredParam, requiredQuery, yes } from "../http";
 
 const ARCHIVE_BASE = "https://archive.org";
 
@@ -39,7 +39,7 @@ function archiveIdentifier(c: ApiContext) {
 export async function archiveAdvanced(c: ApiContext, query?: string) {
   const url = new URL("/advancedsearch.php", ARCHIVE_BASE);
   url.searchParams.set("q", query || requiredQuery(c));
-  url.searchParams.set("rows", `${limit(c, 1000, 1000)}`);
+  applyLimit(c, url, "rows");
   url.searchParams.set("page", `${page(c)}`);
   url.searchParams.set("output", "json");
   url.searchParams.set("sort[]", c.req.query("sort") || "downloads desc");

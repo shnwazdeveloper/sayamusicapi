@@ -1,5 +1,5 @@
 import type { ApiContext } from "../http";
-import { ApiError, encodedPath, fetchJson, limit, requiredParam, requiredQuery } from "../http";
+import { ApiError, applyLimit, encodedPath, fetchJson, requestedLimit, requiredParam, requiredQuery } from "../http";
 
 const DEEZER_BASE = "https://api.deezer.com/";
 const RADIO_BASE = "https://de1.api.radio-browser.info/json/";
@@ -36,7 +36,7 @@ export async function deezerSearch(c: ApiContext, resource: string) {
   const endpoint = resourceMap[resource] || `search/${pathResource(resource)}`;
   const url = new URL(endpoint, DEEZER_BASE);
   url.searchParams.set("q", queryOrRequired(c));
-  url.searchParams.set("limit", `${limit(c, 100, 100)}`);
+  applyLimit(c, url);
   url.searchParams.set("index", c.req.query("offset") || c.req.query("index") || "0");
   const order = c.req.query("order");
   if (order) {
@@ -53,7 +53,7 @@ export async function deezerLookup(c: ApiContext, resource: string) {
     ? `${normalized}/${encodedPath(id)}/${pathResource(connection)}`
     : `${normalized}/${encodedPath(id)}`;
   const url = new URL(path, DEEZER_BASE);
-  url.searchParams.set("limit", `${limit(c, 100, 100)}`);
+  applyLimit(c, url);
   url.searchParams.set("index", c.req.query("offset") || c.req.query("index") || "0");
   try {
     return await fetchJson(c, url);
@@ -79,12 +79,13 @@ export async function deezerChart(c: ApiContext) {
     ? `chart/${encodedPath(chartId)}/${pathResource(connection)}`
     : `chart/${encodedPath(chartId)}`;
   const url = new URL(path, DEEZER_BASE);
-  url.searchParams.set("limit", `${limit(c, 100, 100)}`);
+  applyLimit(c, url);
   return fetchJson(c, url);
 }
 
 export async function radioBrowserStations(c: ApiContext, selector: string) {
   const q = queryOrDefault(c, "music");
+  const requested = requestedLimit(c);
   const selectorMap: Record<string, string> = {
     search: "stations/search",
     "by-name": `stations/byname/${encodedPath(q)}`,
@@ -101,15 +102,15 @@ export async function radioBrowserStations(c: ApiContext, selector: string) {
     "by-codec": `stations/bycodec/${encodedPath(q)}`,
     "by-codec-exact": `stations/bycodecexact/${encodedPath(q)}`,
     "by-uuid": `stations/byuuid/${encodedPath(q)}`,
-    "top-vote": `stations/topvote/${limit(c, 100, 1000)}`,
-    "top-click": `stations/topclick/${limit(c, 100, 1000)}`,
-    "last-click": `stations/lastclick/${limit(c, 100, 1000)}`,
-    "last-change": `stations/lastchange/${limit(c, 100, 1000)}`
+    "top-vote": requested ? `stations/topvote/${requested}` : "stations/topvote",
+    "top-click": requested ? `stations/topclick/${requested}` : "stations/topclick",
+    "last-click": requested ? `stations/lastclick/${requested}` : "stations/lastclick",
+    "last-change": requested ? `stations/lastchange/${requested}` : "stations/lastchange"
   };
   const url = new URL(selectorMap[selector] || selectorMap.search, RADIO_BASE);
   if (selector === "search") {
     url.searchParams.set("name", q);
-    url.searchParams.set("limit", `${limit(c, 100, 1000)}`);
+    applyLimit(c, url);
     url.searchParams.set("offset", c.req.query("offset") || "0");
     for (const key of ["country", "countrycode", "language", "tag", "codec", "state"]) {
       const value = c.req.query(key);
@@ -143,7 +144,7 @@ export async function openverseSearch(c: ApiContext, media: string) {
   const normalized = media === "image" || media === "images" ? "images" : "audio";
   const url = new URL(`${normalized}/`, OPENVERSE_BASE);
   url.searchParams.set("q", queryOrRequired(c));
-  url.searchParams.set("page_size", `${limit(c, 20, 20)}`);
+  applyLimit(c, url, "page_size");
   url.searchParams.set("page", c.req.query("page") || "1");
   for (const key of ["source", "license", "license_type", "category", "extension", "length"]) {
     const value = c.req.query(key);
@@ -172,7 +173,7 @@ export async function wikidataSearch(c: ApiContext, entityType = "item") {
   url.searchParams.set("language", c.req.query("language") || "en");
   url.searchParams.set("uselang", c.req.query("uselang") || "en");
   url.searchParams.set("type", entityType === "properties" ? "property" : "item");
-  url.searchParams.set("limit", `${limit(c, 50, 50)}`);
+  applyLimit(c, url);
   url.searchParams.set("search", queryOrRequired(c));
   url.searchParams.set("origin", "*");
   return fetchJson(c, url, { cf: { cacheTtl: 3600, cacheEverything: true } });
@@ -227,7 +228,7 @@ export async function wikimediaSearch(c: ApiContext, project: string) {
   url.searchParams.set("format", "json");
   url.searchParams.set("list", "search");
   url.searchParams.set("srsearch", queryOrRequired(c));
-  url.searchParams.set("srlimit", `${limit(c, 50, 50)}`);
+  applyLimit(c, url, "srlimit");
   url.searchParams.set("origin", "*");
   return fetchJson(c, url, { cf: { cacheTtl: 3600, cacheEverything: true } });
 }
@@ -292,7 +293,7 @@ export async function githubSearch(c: ApiContext, resource: string) {
   };
   const url = new URL(resourceMap[resource] || "search/repositories", GITHUB_BASE);
   url.searchParams.set("q", queryOrDefault(c, "music api"));
-  url.searchParams.set("per_page", `${limit(c, 100, 100)}`);
+  applyLimit(c, url, "per_page");
   const sort = c.req.query("sort");
   if (sort) {
     url.searchParams.set("sort", sort);

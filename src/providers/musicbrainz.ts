@@ -1,5 +1,5 @@
 import type { ApiContext } from "../http";
-import { fetchJson, limit, offset, requiredParam, requiredQuery } from "../http";
+import { applyLimit, fetchJson, offset, requiredParam, requiredQuery } from "../http";
 
 const MB_BASE = "https://musicbrainz.org/ws/2/";
 
@@ -58,7 +58,7 @@ export async function mbSearch(c: ApiContext, resourceKey: string, query?: strin
 
   const url = new URL(resource, MB_BASE);
   url.searchParams.set("query", query || requiredQuery(c));
-  url.searchParams.set("limit", `${limit(c, 100, 100)}`);
+  applyLimit(c, url);
   url.searchParams.set("offset", `${offset(c, 0, 5000)}`);
   url.searchParams.set("fmt", "json");
 
@@ -86,7 +86,7 @@ export async function mbLookup(
 export async function mbBrowse(c: ApiContext, resource: string, by: string, id: string) {
   const url = new URL(resource, MB_BASE);
   url.searchParams.set(by, id);
-  url.searchParams.set("limit", `${limit(c, 100, 100)}`);
+  applyLimit(c, url);
   url.searchParams.set("offset", `${offset(c, 0, 5000)}`);
   url.searchParams.set("fmt", "json");
   const inc = c.req.query("inc");

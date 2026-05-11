@@ -1,7 +1,7 @@
 import type { ApiContext } from "../http";
-import { fetchJson, limit, requiredParam, requiredQuery, yes } from "../http";
+import { fetchJson, requestedLimit, requiredParam, requiredQuery, yes } from "../http";
 
-const AUDIUS_BASE = "https://api.audius.co/v1";
+const AUDIUS_BASE = "https://api.audius.co/";
 
 function audiusHeaders(c: ApiContext) {
   const headers = new Headers();
@@ -16,7 +16,7 @@ export async function audiusGet(
   path: string,
   params: Record<string, string> = {}
 ) {
-  const url = new URL(path, AUDIUS_BASE);
+  const url = new URL(`v1/${path.replace(/^\/+/, "")}`, AUDIUS_BASE);
   for (const [key, value] of Object.entries(params)) {
     if (value) {
       url.searchParams.set(key, value);
@@ -33,10 +33,14 @@ export async function audiusSearch(
   resource: "tracks" | "users" | "playlists",
   query?: string
 ) {
-  return audiusGet(c, `/${resource}/search`, {
-    query: query || requiredQuery(c),
-    limit: `${limit(c, 100, 100)}`
-  });
+  const urlParams: Record<string, string> = {
+    query: query || requiredQuery(c)
+  };
+  const requested = requestedLimit(c);
+  if (requested) {
+    urlParams.limit = requested;
+  }
+  return audiusGet(c, `/${resource}/search`, urlParams);
 }
 
 export async function audiusTrack(c: ApiContext) {
@@ -45,7 +49,7 @@ export async function audiusTrack(c: ApiContext) {
 
 export async function audiusTrackStream(c: ApiContext, trackId?: string) {
   const id = trackId || requiredParam(c, "id");
-  const url = new URL(`/tracks/${id}/stream`, AUDIUS_BASE);
+  const url = new URL(`v1/tracks/${id}/stream`, AUDIUS_BASE);
   let response: Response;
   try {
     response = await fetch(url.toString(), {
@@ -106,23 +110,33 @@ export async function audiusTrending(
   c: ApiContext,
   resource: "tracks" | "playlists"
 ) {
-  return audiusGet(c, `/${resource}/trending`, {
-    limit: `${limit(c, 100, 100)}`,
+  const urlParams: Record<string, string> = {
     genre: c.req.query("genre") || "",
     time: c.req.query("time") || ""
-  });
+  };
+  const requested = requestedLimit(c);
+  if (requested) {
+    urlParams.limit = requested;
+  }
+  return audiusGet(c, `/${resource}/trending`, urlParams);
 }
 
 export async function audiusUserTracks(c: ApiContext) {
-  return audiusGet(c, `/users/${requiredParam(c, "id")}/tracks`, {
-    limit: `${limit(c, 100, 100)}`
-  });
+  const requested = requestedLimit(c);
+  return audiusGet(
+    c,
+    `/users/${requiredParam(c, "id")}/tracks`,
+    requested ? { limit: requested } : {}
+  );
 }
 
 export async function audiusPlaylistTracks(c: ApiContext) {
-  return audiusGet(c, `/playlists/${requiredParam(c, "id")}/tracks`, {
-    limit: `${limit(c, 100, 100)}`
-  });
+  const requested = requestedLimit(c);
+  return audiusGet(
+    c,
+    `/playlists/${requiredParam(c, "id")}/tracks`,
+    requested ? { limit: requested } : {}
+  );
 }
 
 export function normalizeAudiusTracks(data: unknown) {

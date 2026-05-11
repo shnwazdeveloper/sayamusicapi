@@ -1,7 +1,7 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import app from "../src/index";
 import { endpointCount, endpoints } from "../src/endpoints";
-import { limit } from "../src/http";
+import { applyLimit, requestedLimit } from "../src/http";
 
 describe("SayaMusicAPI", () => {
   it("publishes more than 300 endpoints", () => {
@@ -17,14 +17,49 @@ describe("SayaMusicAPI", () => {
     expect(body.data.endpointCount).toBe(endpointCount);
   });
 
-  it("does not clamp the optional limit query on the API side", () => {
-    const context = {
+  it("does not add a default API-side limit", () => {
+    const withoutLimit = {
+      req: {
+        query: () => undefined
+      }
+    };
+    const withLimit = {
       req: {
         query: (key: string) => (key === "limit" ? "9999" : undefined)
       }
     };
+    const url = new URL("https://example.com/search");
 
-    expect(limit(context as any, 100, 100)).toBe(9999);
+    expect(requestedLimit(withoutLimit as any)).toBeUndefined();
+    applyLimit(withoutLimit as any, url);
+    expect(url.searchParams.has("limit")).toBe(false);
+    expect(requestedLimit(withLimit as any)).toBe("9999");
+    applyLimit(withLimit as any, url);
+    expect(url.searchParams.get("limit")).toBe("9999");
+  });
+
+  it("builds Audius v1 URLs and does not add default paging", async () => {
+    const originalFetch = globalThis.fetch;
+    const seenUrls: string[] = [];
+    globalThis.fetch = vi.fn(async (input: RequestInfo | URL) => {
+      seenUrls.push(input instanceof URL ? input.toString() : input.toString());
+      return new Response(JSON.stringify({ data: [] }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" }
+      });
+    }) as any;
+
+    try {
+      await app.request("/v1/audius/search/tracks?q=believer");
+      await app.request("/v1/audius/search/tracks?q=believer&limit=9999");
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+
+    expect(seenUrls[0]).toBe("https://api.audius.co/v1/tracks/search?query=believer");
+    expect(seenUrls[1]).toBe(
+      "https://api.audius.co/v1/tracks/search?query=believer&limit=9999"
+    );
   });
 
   it("serves the landing page and docs page", async () => {
@@ -48,7 +83,7 @@ describe("SayaMusicAPI", () => {
     const docs = await app.request("/docs");
     expect(docs.status).toBe(200);
     const docsHtml = await docs.text();
-    expect(docsHtml).toContain("Free Limit Policy");
+    expect(docsHtml).toContain("Free Access Policy");
     expect(docsHtml).not.toContain("AUDIUS_API_KEY");
     expect(docsHtml).not.toContain("wrangler secret put");
     expect(docsHtml).not.toContain("route-flow");

@@ -312,7 +312,7 @@ export function landingPage(origin: string) {
           </article>
           <article>
             <h2>Free Access</h2>
-            <p>No API key, paid tier, quota, gateway rate limit, or API-side result cap is added by SayaMusicAPI. Upstream services may still enforce their own public rules.</p>
+            <p>No API key, paid tier, quota, request throttling, or API-side result cap is added by SayaMusicAPI. Upstream services may still enforce their own public rules.</p>
           </article>
         </section>
       </main>
@@ -415,9 +415,9 @@ export function docsPage(origin: string) {
           </section>
 
           <section class="doc-section" id="policy">
-            <h2>Free Limit Policy</h2>
+            <h2>Free Access Policy</h2>
             <p>
-              SayaMusicAPI does not add API keys, paid tiers, user quotas, gateway rate limits, or API-side result caps. The <code>limit</code> query stays optional and uncapped by SayaMusicAPI, so the API remains free to call.
+              SayaMusicAPI does not add API keys, paid tiers, user quotas, request throttling, or API-side result caps. Provider paging inputs are passed through only when clients send them, so the API remains free to call.
             </p>
             <div class="notice">
               Upstream providers can still enforce their own public paging, licensing, availability, and fair-use rules.

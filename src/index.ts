@@ -327,8 +327,8 @@ app.get("/v1/quality", (c) =>
   jsonOk(c, {
     policy:
       "This API resolves legal metadata, previews, artwork, open streams, and public/free downloads. It does not bypass paywalls or DRM.",
-    apiSideLimits:
-      "No API-side quota, paid tier, gateway rate limit, or result cap is added by SayaMusicAPI. The optional limit query is not capped by this API; upstream providers may still enforce their own public limits.",
+    apiSideAccess:
+      "No API-side quota, paid tier, request throttling, or result cap is added by SayaMusicAPI. Provider paging inputs are passed through only when clients send them; upstream providers may still enforce their own public rules.",
     tiers: [
       {
         source: "apple",
