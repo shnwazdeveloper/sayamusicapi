@@ -24,6 +24,7 @@ export type ApiContext = Context<ApiBindings>;
 
 export const USER_AGENT =
   "SayamusicAPI/0.1.0 (https://github.com/shnwazdeveloper/sayamusicapi)";
+const UPSTREAM_TIMEOUT_MS = 12000;
 
 export function apiName(c: ApiContext) {
   return c.env?.API_NAME || "SayaMusicAPI";
@@ -147,10 +148,13 @@ export async function fetchJson<T>(
   headers.set("User-Agent", headers.get("User-Agent") || USER_AGENT);
 
   let response: Response;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), UPSTREAM_TIMEOUT_MS);
   try {
     response = await fetch(url.toString(), {
       ...init,
       headers,
+      signal: init.signal || controller.signal,
       cf: {
         cacheEverything: true,
         cacheTtl: cacheTtl(c),
@@ -165,6 +169,8 @@ export async function fetchJson<T>(
       message: "Endpoint is alive, but the upstream provider request could not be completed.",
       details: error instanceof Error ? error.message : "Network request failed"
     } as T;
+  } finally {
+    clearTimeout(timeout);
   }
 
   if (!response.ok) {

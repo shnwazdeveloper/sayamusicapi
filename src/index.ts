@@ -581,38 +581,92 @@ for (const resource of Object.keys(mbLookupResources)) {
 }
 
 app.get("/v1/cover-art/release/:id", (c) => jsonOk(c, coverArtJson(c, "release")));
-app.get("/v1/cover-art/release/:id/front", (c) =>
-  c.redirect(coverArtImageUrl("release", requiredParam(c, "id"), "front").toString(), 302)
-);
-app.get("/v1/cover-art/release/:id/back", (c) =>
-  c.redirect(coverArtImageUrl("release", requiredParam(c, "id"), "back").toString(), 302)
-);
-app.get("/v1/cover-art/release/:id/file/:file", (c) =>
-  c.redirect(
-    coverArtFileUrl(requiredParam(c, "id"), requiredParam(c, "file")).toString(),
-    302
-  )
-);
+app.get("/v1/cover-art/release/:id/front", (c) => {
+  const id = requiredParam(c, "id");
+  const imageUrl = coverArtImageUrl("release", id, "front").toString();
+  if (yes(c, "redirect")) {
+    return c.redirect(imageUrl, 302);
+  }
+  return jsonOk(c, {
+    endpointAlive: true,
+    source: "cover-art",
+    scope: "release",
+    id,
+    kind: "front",
+    imageUrl,
+    redirect: `${c.req.path}?redirect=true`
+  });
+});
+app.get("/v1/cover-art/release/:id/back", (c) => {
+  const id = requiredParam(c, "id");
+  const imageUrl = coverArtImageUrl("release", id, "back").toString();
+  if (yes(c, "redirect")) {
+    return c.redirect(imageUrl, 302);
+  }
+  return jsonOk(c, {
+    endpointAlive: true,
+    source: "cover-art",
+    scope: "release",
+    id,
+    kind: "back",
+    imageUrl,
+    redirect: `${c.req.path}?redirect=true`
+  });
+});
+app.get("/v1/cover-art/release/:id/file/:file", (c) => {
+  const id = requiredParam(c, "id");
+  const file = requiredParam(c, "file");
+  const fileUrl = coverArtFileUrl(id, file).toString();
+  if (yes(c, "redirect")) {
+    return c.redirect(fileUrl, 302);
+  }
+  return jsonOk(c, {
+    endpointAlive: true,
+    source: "cover-art",
+    scope: "release",
+    id,
+    file,
+    fileUrl,
+    redirect: `${c.req.path}?redirect=true`
+  });
+});
 app.get("/v1/cover-art/release-group/:id", (c) =>
   jsonOk(c, coverArtJson(c, "release-group"))
 );
-app.get("/v1/cover-art/release-group/:id/front", (c) =>
-  c.redirect(
-    coverArtImageUrl("release-group", requiredParam(c, "id"), "front").toString(),
-    302
-  )
-);
-app.get("/v1/cover-art/release-group/:id/front/:size", (c) =>
-  c.redirect(
-    coverArtImageUrl(
-      "release-group",
-      requiredParam(c, "id"),
-      "front",
-      requiredParam(c, "size")
-    ).toString(),
-    302
-  )
-);
+app.get("/v1/cover-art/release-group/:id/front", (c) => {
+  const id = requiredParam(c, "id");
+  const imageUrl = coverArtImageUrl("release-group", id, "front").toString();
+  if (yes(c, "redirect")) {
+    return c.redirect(imageUrl, 302);
+  }
+  return jsonOk(c, {
+    endpointAlive: true,
+    source: "cover-art",
+    scope: "release-group",
+    id,
+    kind: "front",
+    imageUrl,
+    redirect: `${c.req.path}?redirect=true`
+  });
+});
+app.get("/v1/cover-art/release-group/:id/front/:size", (c) => {
+  const id = requiredParam(c, "id");
+  const size = requiredParam(c, "size");
+  const imageUrl = coverArtImageUrl("release-group", id, "front", size).toString();
+  if (yes(c, "redirect")) {
+    return c.redirect(imageUrl, 302);
+  }
+  return jsonOk(c, {
+    endpointAlive: true,
+    source: "cover-art",
+    scope: "release-group",
+    id,
+    kind: "front",
+    size,
+    imageUrl,
+    redirect: `${c.req.path}?redirect=true`
+  });
+});
 app.get("/v1/cover-art/lookup", (c) => jsonOk(c, coverArtLookup(c)));
 
 app.get("/v1/archive/search/audio", (c) => jsonOk(c, archiveSearch(c, "audio")));
@@ -635,12 +689,22 @@ app.get("/v1/archive/items/:identifier/download", async (c) => {
   }
   return jsonOk(c, data);
 });
-app.get("/v1/archive/items/:identifier/file/:file", (c) =>
-  c.redirect(
-    archiveFileUrl(requiredParam(c, "identifier"), requiredParam(c, "file")).toString(),
-    302
-  )
-);
+app.get("/v1/archive/items/:identifier/file/:file", (c) => {
+  const identifier = requiredParam(c, "identifier");
+  const file = requiredParam(c, "file");
+  const fileUrl = archiveFileUrl(identifier, file).toString();
+  if (yes(c, "redirect")) {
+    return c.redirect(fileUrl, 302);
+  }
+  return jsonOk(c, {
+    endpointAlive: true,
+    source: "archive",
+    identifier,
+    file,
+    fileUrl,
+    redirect: `${c.req.path}?redirect=true`
+  });
+});
 app.get("/v1/archive/items/:identifier", (c) => jsonOk(c, archiveMetadata(c)));
 
 app.get("/v1/audius/search/tracks", (c) => jsonOk(c, audiusSearch(c, "tracks")));

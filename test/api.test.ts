@@ -146,6 +146,26 @@ describe("SayaMusicAPI", () => {
     expect(body.data.message).not.toContain("not in the documented route registry");
   });
 
+  it("keeps external file and image routes alive as JSON by default", async () => {
+    const routes = [
+      "/v1/cover-art/release/59211ea4-ffd2-4ad9-9a4e-941d3148024a/front",
+      "/v1/cover-art/release/59211ea4-ffd2-4ad9-9a4e-941d3148024a/back",
+      "/v1/cover-art/release/59211ea4-ffd2-4ad9-9a4e-941d3148024a/file/cover.jpg",
+      "/v1/cover-art/release-group/59211ea4-ffd2-4ad9-9a4e-941d3148024a/front",
+      "/v1/cover-art/release-group/59211ea4-ffd2-4ad9-9a4e-941d3148024a/front/250",
+      "/v1/archive/items/opensource_audio/file/opensource_audio_meta.xml"
+    ];
+
+    for (const route of routes) {
+      const response = await app.request(route);
+      expect(response.status).toBe(200);
+      const body = (await response.json()) as any;
+      expect(body.ok).toBe(true);
+      expect(body.data.endpointAlive).toBe(true);
+      expect(body.data.redirect).toContain("redirect=true");
+    }
+  });
+
   it("routes new providers instead of falling through to 404", async () => {
     const smokePaths = [
       "/v1/deezer/search/tracks",
