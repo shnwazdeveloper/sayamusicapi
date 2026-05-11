@@ -56,13 +56,13 @@ const docTabs = [
 ] as const;
 
 function sourcePills() {
-  return sourceNames.map((source) => `<span>${escapeHtml(source)}</span>`).join("");
+  return sourceNames.map((source) => `<span>${escapeHtml(source)}</span>`).join("\n");
 }
 
 function docsTabs() {
   return docTabs
     .map(([id, label]) => `<a href="#${id}">${escapeHtml(label)}</a>`)
-    .join("");
+    .join("\n");
 }
 
 function endpointGroups() {
@@ -152,6 +152,7 @@ function baseHead(title: string, description: string) {
     <meta name="description" content="${escapeHtml(description)}">
     <title>${escapeHtml(title)}</title>
     <link rel="stylesheet" href="/site.css">
+    <style>${siteCss()}</style>
   `;
 }
 
@@ -271,7 +272,7 @@ export function landingPage(origin: string) {
             <h2>More legal web sources, one response shape.</h2>
           </div>
           <div class="source-list">
-            ${sourceNames.map((source, index) => `<span style="--i:${index}">${escapeHtml(source)}</span>`).join("")}
+            ${sourceNames.map((source, index) => `<span style="--i:${index}">${escapeHtml(source)}</span>`).join("\n")}
           </div>
         </section>
 
