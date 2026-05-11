@@ -97,12 +97,11 @@ function providerTabs() {
 
   return Array.from(groups.entries())
     .map(([provider, items]) => {
-      const sample = items.slice(0, 3).map((item) => item.path).join(" / ");
       return `
         <a class="provider-tab" href="#endpoints">
           <span>${escapeHtml(provider)}</span>
           <strong>${items.length}</strong>
-          <small>${escapeHtml(sample)}</small>
+          <small>Documented routes in the endpoint registry</small>
         </a>`;
     })
     .join("");
@@ -549,9 +548,9 @@ pre {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 24px;
-  min-height: 68px;
-  padding: 0 6vw;
+  gap: 18px;
+  min-height: 74px;
+  padding: 10px 6vw;
   border-bottom: 1px solid var(--line);
   background: var(--paper);
 }
@@ -581,11 +580,42 @@ pre {
 .nav-links {
   display: flex;
   align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
+  gap: 2px;
+  max-width: 100%;
+  overflow-x: auto;
+  padding: 5px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel);
+  scrollbar-width: none;
 }
 
-.nav-links a,
+.nav-links::-webkit-scrollbar {
+  display: none;
+}
+
+.nav-links a {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  padding: 10px 14px;
+  color: var(--muted);
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+  transition: background-color 180ms ease, color 180ms ease;
+}
+
+.nav-links a:first-child {
+  color: #fff;
+  background: var(--black);
+}
+
+.nav-links a:hover {
+  color: var(--ink);
+  background: #eef1ed;
+}
+
 .button {
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -594,7 +624,6 @@ pre {
   transition: transform 180ms ease, background-color 180ms ease, border-color 180ms ease;
 }
 
-.nav-links a:hover,
 .button:hover {
   transform: translateY(-2px);
   border-color: var(--ink);
@@ -1018,38 +1047,85 @@ h1 {
 
 .docs-shell {
   display: grid;
-  grid-template-columns: 240px minmax(0, 1fr);
-  gap: 36px;
-  padding: 36px 6vw 72px;
+  grid-template-columns: 1fr;
+  gap: 22px;
+  padding: 28px 6vw 72px;
 }
 
 .docs-aside {
   position: sticky;
-  top: 92px;
-  align-self: start;
-  display: grid;
-  gap: 8px;
+  top: 0;
+  z-index: 9;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow-x: auto;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--paper);
+  scrollbar-width: none;
+}
+
+.docs-aside::-webkit-scrollbar {
+  display: none;
 }
 
 .docs-aside a {
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 10px 12px;
-  background: var(--panel);
+  flex: 0 0 auto;
+  border-radius: 999px;
+  padding: 10px 13px;
+  color: var(--muted);
+  font-weight: 800;
+  line-height: 1;
+  transition: background-color 180ms ease, color 180ms ease;
+}
+
+.docs-aside a:first-child,
+.docs-aside a:hover {
+  color: #fff;
+  background: var(--black);
 }
 
 .docs-content {
   display: grid;
   gap: 20px;
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
 }
 
 .docs-hero,
 .doc-section {
+  position: relative;
+  overflow: hidden;
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: clamp(22px, 4vw, 42px);
   background: var(--panel);
   scroll-margin-top: 92px;
+}
+
+.docs-hero::after,
+.doc-section::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 3px;
+  pointer-events: none;
+  background: linear-gradient(90deg, var(--green), var(--gold), var(--coral), var(--blue));
+}
+
+.docs-hero::after {
+  bottom: 0;
+  animation: motionTrack 4s ease-in-out infinite alternate;
+}
+
+.doc-section::before {
+  top: 0;
+  transform-origin: left center;
+  animation: sectionRail 3s ease-in-out infinite alternate;
 }
 
 .docs-hero h1 {
@@ -1098,21 +1174,46 @@ h1 {
 
 .provider-tabs {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
   margin-top: 18px;
 }
 
 .provider-tab {
+  position: relative;
+  overflow: hidden;
   display: grid;
+  align-content: space-between;
   gap: 8px;
-  padding: 14px;
-  transition: transform 180ms ease, border-color 180ms ease;
+  min-height: 124px;
+  padding: 18px;
+  background: #f8f1e3;
+  transition: transform 180ms ease, border-color 180ms ease, background-color 180ms ease;
+}
+
+.provider-tab:nth-child(3n) {
+  background: #e8f2ef;
+}
+
+.provider-tab:nth-child(3n + 1) {
+  background: #f6e9e6;
+}
+
+.provider-tab::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 42%;
+  height: 3px;
+  background: var(--black);
+  animation: providerRail 2.8s ease-in-out infinite alternate;
 }
 
 .provider-tab:hover {
   transform: translateY(-2px);
   border-color: var(--black);
+  background: var(--panel);
 }
 
 .provider-tab span {
@@ -1301,6 +1402,21 @@ th {
   to { transform: scaleX(1); }
 }
 
+@keyframes motionTrack {
+  from { transform: translateX(-55%) scaleX(0.5); }
+  to { transform: translateX(55%) scaleX(1); }
+}
+
+@keyframes sectionRail {
+  from { transform: translateX(-65%) scaleX(0.35); }
+  to { transform: translateX(65%) scaleX(0.85); }
+}
+
+@keyframes providerRail {
+  from { transform: translateX(-120%); }
+  to { transform: translateX(240%); }
+}
+
 @media (max-width: 860px) {
   .topbar,
   .hero,
@@ -1337,7 +1453,7 @@ th {
 
   .docs-aside {
     position: static;
-    grid-template-columns: repeat(2, 1fr);
+    width: 100%;
   }
 
   .section-heading {
