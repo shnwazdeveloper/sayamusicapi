@@ -24,7 +24,7 @@ describe("SayaMusicAPI", () => {
     expect(landingHtml).toContain("SayaMusicAPI");
     expect(landingHtml).not.toContain("Try a search");
     expect(landingHtml).not.toContain("header-motion");
-    expect(landingHtml).not.toContain('<a href="/docs">Docs</a>');
+    expect(landingHtml).toContain('<a href="/docs">Docs</a>');
     expect(landingHtml).not.toContain('<a href="/docs#quickstart">Quickstart</a>');
     expect(landingHtml).not.toContain('<a href="/docs#examples">Examples</a>');
     expect(landingHtml).not.toContain('<a href="/docs#deploy">Deploy</a>');
@@ -38,6 +38,8 @@ describe("SayaMusicAPI", () => {
     expect(docs.status).toBe(200);
     const docsHtml = await docs.text();
     expect(docsHtml).toContain("Free Limit Policy");
+    expect(docsHtml).not.toContain("AUDIUS_API_KEY");
+    expect(docsHtml).not.toContain("wrangler secret put");
     expect(docsHtml).not.toContain("route-flow");
     expect(docsHtml).not.toContain("providerRail");
 

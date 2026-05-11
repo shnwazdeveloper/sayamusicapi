@@ -163,6 +163,7 @@ function nav() {
         Saya Music API
       </a>
       <div class="nav-links">
+        <a href="/docs">Docs</a>
         <a href="/v1/endpoints">Endpoints</a>
         <a href="/v1/openapi.json">OpenAPI</a>
         <a href="https://github.com/shnwazdeveloper/sayamusicapi">GitHub</a>
@@ -469,9 +470,6 @@ export function docsPage(origin: string) {
 npm run typecheck
 npm test
 npm run deploy</code></pre>
-              <div class="notice">
-                Optional: set <code>AUDIUS_API_KEY</code> with <code>wrangler secret put AUDIUS_API_KEY</code> for more reliable Audius public API access.
-              </div>
             </div>
           </section>
         </article>
@@ -625,9 +623,9 @@ pre {
 .hero {
   min-height: 76vh;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(320px, 520px);
+  grid-template-columns: minmax(0, 1.15fr) minmax(300px, 440px);
   align-items: center;
-  gap: 48px;
+  gap: 36px;
   padding: 8vh 6vw 6vh;
   border-bottom: 1px solid var(--line);
 }
@@ -763,9 +761,11 @@ pre {
 
 h1 {
   margin: 0;
-  font-size: clamp(48px, 8vw, 112px);
-  line-height: 0.92;
+  max-width: 820px;
+  font-size: clamp(42px, 5.6vw, 76px);
+  line-height: 1;
   letter-spacing: 0;
+  text-wrap: balance;
 }
 
 .lede {

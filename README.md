@@ -50,12 +50,6 @@ npm test
 npm run deploy
 ```
 
-Optional Audius key:
-
-```bash
-wrangler secret put AUDIUS_API_KEY
-```
-
 ## Important Endpoints
 
 ```text
@@ -75,7 +69,7 @@ GET /v1/media/artwork?provider=cover-art&release=...
 - MusicBrainz: structured open music metadata, relationships, recordings, releases, artists, and ISRC lookup.
 - Cover Art Archive: release and release-group cover art.
 - Internet Archive: public/free item metadata and file links. Check item license metadata before reuse.
-- Audius: open music catalog and stream resolution. An API token is recommended for reliable higher-rate use.
+- Audius: open music catalog and stream resolution.
 - Deezer: public metadata, chart, artwork, and preview clip routes.
 - Radio Browser: public radio station metadata and stream URLs.
 - Openverse: openly licensed audio and image discovery.

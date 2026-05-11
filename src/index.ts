@@ -134,7 +134,7 @@ const providers = [
     id: "audius",
     name: "Audius",
     features: ["open music search", "trending", "streams"],
-    auth: "optional AUDIUS_API_KEY recommended"
+    auth: "none for public read routes"
   },
   {
     id: "deezer",
@@ -337,7 +337,7 @@ app.get("/v1/sources", (c) =>
     archive:
       "Internet Archive advanced search and metadata APIs for public/free media files.",
     audius:
-      "Audius REST API for open music catalog search and stream resolution. AUDIUS_API_KEY is recommended.",
+      "Audius REST API for open music catalog search and stream resolution.",
     deezer:
       "Deezer public API for metadata, charts, artwork, and preview clips.",
     radioBrowser:
