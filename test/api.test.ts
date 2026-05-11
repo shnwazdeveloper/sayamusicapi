@@ -143,6 +143,7 @@ describe("SayaMusicAPI", () => {
     expect(body.data.routeMatched).toBe(false);
     expect(body.data.endpointCount).toBe(endpointCount);
     expect(body.data.endpoints).toBe("/v1/endpoints");
+    expect(body.data.message).not.toContain("not in the documented route registry");
   });
 
   it("routes new providers instead of falling through to 404", async () => {

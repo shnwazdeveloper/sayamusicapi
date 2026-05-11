@@ -127,7 +127,7 @@ app.notFound((c) => {
     routeMatched: false,
     requestedPath: url.pathname,
     message:
-      "SayaMusicAPI is alive. This exact URL is not in the documented route registry, so use /v1/endpoints or one of the suggested routes.",
+      "SayaMusicAPI is alive. Use /v1/endpoints or one of the suggested routes below.",
     docs: "/docs",
     endpoints: "/v1/endpoints",
     endpointCount,
