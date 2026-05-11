@@ -744,9 +744,7 @@ pre {
 }
 
 .hero-copy,
-.console-panel,
-.docs-hero,
-.doc-section {
+.console-panel {
   animation: enter 520ms ease both;
 }
 

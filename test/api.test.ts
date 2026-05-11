@@ -42,6 +42,7 @@ describe("SayaMusicAPI", () => {
     expect(docsHtml).not.toContain("wrangler secret put");
     expect(docsHtml).not.toContain("route-flow");
     expect(docsHtml).not.toContain("providerRail");
+    expect(docsHtml).not.toContain(".docs-hero,\n.doc-section {\n  animation");
 
     const css = await app.request("/site.css");
     const cssText = await css.text();
