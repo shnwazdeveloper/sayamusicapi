@@ -163,16 +163,9 @@ function nav() {
         Saya Music API
       </a>
       <div class="nav-links">
-        <a href="/docs">Docs</a>
-        <a href="/docs#quickstart">Quickstart</a>
-        <a href="/docs#examples">Examples</a>
-        <a href="/docs#deploy">Deploy</a>
         <a href="/v1/endpoints">Endpoints</a>
         <a href="/v1/openapi.json">OpenAPI</a>
         <a href="https://github.com/shnwazdeveloper/sayamusicapi">GitHub</a>
-      </div>
-      <div class="header-motion" aria-hidden="true">
-        <span></span><span></span><span></span><span></span>
       </div>
     </nav>
   `;
@@ -200,14 +193,7 @@ export function landingPage(origin: string) {
               A docs-first music API for legal search, metadata, artwork, previews, open streams, public radio, and free-source discovery from the Cloudflare edge.
             </p>
             <div class="actions">
-              <a class="button primary" href="/docs">Open docs</a>
-              <a class="button" href="/v1/endpoints">View endpoints</a>
-              <a class="button" href="/docs#deploy">Cloudflare deploy</a>
-            </div>
-            <div class="hero-chips" aria-label="Fast links">
-              <a href="/v1/deezer/search/tracks?q=believer">Deezer tracks</a>
-              <a href="/v1/openverse/search/audio?q=piano">Open audio</a>
-              <a href="/v1/radio-browser/stations/search?q=lofi">Radio streams</a>
+              <a class="button primary" href="/v1/endpoints">View endpoints</a>
             </div>
           </div>
           <aside class="console-panel" aria-label="API example">
@@ -235,7 +221,7 @@ export function landingPage(origin: string) {
             <p class="eyebrow">Docs page</p>
             <h2>All API tabs in one place.</h2>
             <p>
-              Saya Music API keeps quickstart, search, media helpers, providers, live examples, endpoint registry, and Cloudflare deployment steps together on the docs page.
+              Saya Music API keeps quickstart, search, media helpers, providers, live examples, endpoint registry, and publishing steps together on the docs page.
             </p>
           </div>
           <div class="tab-grid">
@@ -281,7 +267,6 @@ export function landingPage(origin: string) {
               <p class="eyebrow">Live routes</p>
               <h2>Start with the tabs developers actually need.</h2>
             </div>
-            <a class="button compact" href="/docs#examples">More examples</a>
           </div>
           <div class="route-grid">
             ${routeCards(origin)}
@@ -341,9 +326,6 @@ export function docsPage(origin: string) {
             <nav class="doc-tabs" aria-label="Documentation tabs">
               ${docsTabs()}
             </nav>
-            <div class="route-flow" aria-hidden="true">
-              <span></span><span></span><span></span><span></span><span></span>
-            </div>
           </header>
 
           <section class="doc-section" id="quickstart">
@@ -629,40 +611,6 @@ pre {
   border-color: var(--ink);
 }
 
-.header-motion {
-  position: absolute;
-  left: 6vw;
-  right: 6vw;
-  bottom: -1px;
-  display: grid;
-  grid-template-columns: 2fr 1fr 1.4fr 0.8fr;
-  gap: 8px;
-  height: 3px;
-  pointer-events: none;
-}
-
-.header-motion span {
-  border-radius: 999px;
-  background: var(--green);
-  transform-origin: left center;
-  animation: headerRail 1.9s ease-in-out infinite alternate;
-}
-
-.header-motion span:nth-child(2) {
-  background: var(--gold);
-  animation-delay: 110ms;
-}
-
-.header-motion span:nth-child(3) {
-  background: var(--coral);
-  animation-delay: 220ms;
-}
-
-.header-motion span:nth-child(4) {
-  background: var(--blue);
-  animation-delay: 330ms;
-}
-
 .button.primary {
   border-color: var(--black);
   color: #fff;
@@ -833,36 +781,6 @@ h1 {
   gap: 12px;
   flex-wrap: wrap;
   margin-top: 32px;
-}
-
-.hero-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 28px;
-}
-
-.hero-chips a {
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 10px 12px;
-  background: var(--panel);
-  color: var(--muted);
-  font-weight: 700;
-  animation: chipFloat 2.6s ease-in-out infinite alternate;
-}
-
-.hero-chips a:nth-child(2) {
-  animation-delay: 160ms;
-}
-
-.hero-chips a:nth-child(3) {
-  animation-delay: 320ms;
-}
-
-.hero-chips a:hover {
-  color: var(--ink);
-  border-color: var(--black);
 }
 
 .console-panel {
@@ -1106,28 +1024,6 @@ h1 {
   scroll-margin-top: 92px;
 }
 
-.docs-hero::after,
-.doc-section::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 3px;
-  pointer-events: none;
-  background: linear-gradient(90deg, var(--green), var(--gold), var(--coral), var(--blue));
-}
-
-.docs-hero::after {
-  bottom: 0;
-  animation: motionTrack 4s ease-in-out infinite alternate;
-}
-
-.doc-section::before {
-  top: 0;
-  transform-origin: left center;
-  animation: sectionRail 3s ease-in-out infinite alternate;
-}
-
 .docs-hero h1 {
   font-size: clamp(36px, 5vw, 72px);
   line-height: 1;
@@ -1136,27 +1032,6 @@ h1 {
 .docs-hero .doc-tabs {
   margin-top: 24px;
 }
-
-.route-flow {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 8px;
-  margin-top: 24px;
-}
-
-.route-flow span {
-  height: 8px;
-  border-radius: 8px;
-  background: var(--line);
-  transform-origin: left center;
-  animation: routeFlow 1.6s ease-in-out infinite alternate;
-}
-
-.route-flow span:nth-child(1) { background: var(--green); }
-.route-flow span:nth-child(2) { background: var(--gold); animation-delay: 80ms; }
-.route-flow span:nth-child(3) { background: var(--coral); animation-delay: 160ms; }
-.route-flow span:nth-child(4) { background: var(--blue); animation-delay: 240ms; }
-.route-flow span:nth-child(5) { background: var(--black); animation-delay: 320ms; }
 
 .notice {
   margin-top: 16px;
@@ -1197,17 +1072,6 @@ h1 {
 
 .provider-tab:nth-child(3n + 1) {
   background: #f6e9e6;
-}
-
-.provider-tab::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 42%;
-  height: 3px;
-  background: var(--black);
-  animation: providerRail 2.8s ease-in-out infinite alternate;
 }
 
 .provider-tab:hover {
@@ -1382,39 +1246,9 @@ th {
   to { background-position: 24px 0; }
 }
 
-@keyframes headerRail {
-  from { transform: scaleX(0.2); }
-  to { transform: scaleX(1); }
-}
-
-@keyframes chipFloat {
-  from { transform: translateY(0); }
-  to { transform: translateY(-5px); }
-}
-
 @keyframes sourceStep {
   from { transform: translateY(0); }
   to { transform: translateY(-8px); }
-}
-
-@keyframes routeFlow {
-  from { transform: scaleX(0.35); }
-  to { transform: scaleX(1); }
-}
-
-@keyframes motionTrack {
-  from { transform: translateX(-55%) scaleX(0.5); }
-  to { transform: translateX(55%) scaleX(1); }
-}
-
-@keyframes sectionRail {
-  from { transform: translateX(-65%) scaleX(0.35); }
-  to { transform: translateX(65%) scaleX(0.85); }
-}
-
-@keyframes providerRail {
-  from { transform: translateX(-120%); }
-  to { transform: translateX(240%); }
 }
 
 @media (max-width: 860px) {

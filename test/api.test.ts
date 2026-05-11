@@ -23,11 +23,23 @@ describe("SayaMusicAPI", () => {
     const landingHtml = await landing.text();
     expect(landingHtml).toContain("SayaMusicAPI");
     expect(landingHtml).not.toContain("Try a search");
-    expect(landingHtml).toContain("header-motion");
+    expect(landingHtml).not.toContain("header-motion");
+    expect(landingHtml).not.toContain('<a href="/docs">Docs</a>');
+    expect(landingHtml).not.toContain('<a href="/docs#quickstart">Quickstart</a>');
+    expect(landingHtml).not.toContain('<a href="/docs#examples">Examples</a>');
+    expect(landingHtml).not.toContain('<a href="/docs#deploy">Deploy</a>');
+    expect(landingHtml).not.toContain('<a class="button primary" href="/docs">Open docs</a>');
+    expect(landingHtml).not.toContain('<a class="button" href="/docs#deploy">Cloudflare deploy</a>');
+    expect(landingHtml).not.toContain("hero-chips");
+    expect(landingHtml).not.toContain("Deezer tracks");
+    expect(landingHtml).not.toContain("Radio streams");
 
     const docs = await app.request("/docs");
     expect(docs.status).toBe(200);
-    expect(await docs.text()).toContain("Free Limit Policy");
+    const docsHtml = await docs.text();
+    expect(docsHtml).toContain("Free Limit Policy");
+    expect(docsHtml).not.toContain("route-flow");
+    expect(docsHtml).not.toContain("providerRail");
 
     const css = await app.request("/site.css");
     const cssText = await css.text();
