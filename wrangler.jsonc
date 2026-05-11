@@ -1,0 +1,15 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "sayamusicapi",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-05-07",
+  "observability": {
+    "enabled": true
+  },
+  "vars": {
+    "API_NAME": "SayaMusicAPI",
+    "DEFAULT_COUNTRY": "US",
+    "CACHE_TTL_SECONDS": "900"
+  }
+}
+

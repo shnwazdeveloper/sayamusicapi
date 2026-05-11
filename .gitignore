@@ -1,0 +1,8 @@
+node_modules/
+.wrangler/
+.wrangler-dry-run/
+dist/
+coverage/
+.env
+.dev.vars
+*.log
