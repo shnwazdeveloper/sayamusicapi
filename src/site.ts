@@ -42,8 +42,27 @@ const sourceNames = [
   "Odesli"
 ];
 
+const docTabs = [
+  ["start", "Overview"],
+  ["quickstart", "Quickstart"],
+  ["search-tabs", "Search"],
+  ["media-tabs", "Media"],
+  ["policy", "Limits"],
+  ["providers", "Providers"],
+  ["diagnostics", "Alive"],
+  ["examples", "Examples"],
+  ["endpoints", "Endpoints"],
+  ["deploy", "Deploy"]
+] as const;
+
 function sourcePills() {
   return sourceNames.map((source) => `<span>${escapeHtml(source)}</span>`).join("");
+}
+
+function docsTabs() {
+  return docTabs
+    .map(([id, label]) => `<a href="#${id}">${escapeHtml(label)}</a>`)
+    .join("");
 }
 
 function endpointGroups() {
@@ -68,6 +87,64 @@ function endpointGroups() {
     .join("");
 }
 
+function providerTabs() {
+  const groups = new Map<string, EndpointDoc[]>();
+  for (const endpoint of endpoints) {
+    const current = groups.get(endpoint.provider) || [];
+    current.push(endpoint);
+    groups.set(endpoint.provider, current);
+  }
+
+  return Array.from(groups.entries())
+    .map(([provider, items]) => {
+      const sample = items.slice(0, 3).map((item) => item.path).join(" / ");
+      return `
+        <a class="provider-tab" href="#endpoints">
+          <span>${escapeHtml(provider)}</span>
+          <strong>${items.length}</strong>
+          <small>${escapeHtml(sample)}</small>
+        </a>`;
+    })
+    .join("");
+}
+
+function routeCards(origin: string) {
+  const cards = [
+    {
+      title: "Unified search",
+      route: "/v1/search/tracks?q=believer",
+      copy: "Aggregate legal metadata and previews across configured public sources."
+    },
+    {
+      title: "Provider search",
+      route: "/v1/deezer/search/tracks?q=believer",
+      copy: "Call direct provider routes when you need a specific catalog response."
+    },
+    {
+      title: "Open audio",
+      route: "/v1/openverse/search/audio?q=piano",
+      copy: "Find openly licensed audio and source metadata through Openverse."
+    },
+    {
+      title: "Live radio",
+      route: "/v1/radio-browser/stations/search?q=lofi",
+      copy: "Discover public radio stations and stream URLs from Radio Browser."
+    }
+  ];
+
+  return cards
+    .map(
+      (card) => `
+        <article class="route-card">
+          <span>${escapeHtml(card.title)}</span>
+          <code>${escapeHtml(card.route)}</code>
+          <p>${escapeHtml(card.copy)}</p>
+          <a href="${escapeHtml(origin + card.route)}">Open route</a>
+        </article>`
+    )
+    .join("");
+}
+
 function baseHead(title: string, description: string) {
   return `
     <meta charset="utf-8">
@@ -83,10 +160,13 @@ function nav() {
     <nav class="topbar" aria-label="Primary navigation">
       <a class="brand" href="/" aria-label="SayaMusicAPI home">
         <span class="brand-mark" aria-hidden="true"></span>
-        SayaMusicAPI
+        Saya Music API
       </a>
       <div class="nav-links">
         <a href="/docs">Docs</a>
+        <a href="/docs#quickstart">Quickstart</a>
+        <a href="/docs#examples">Examples</a>
+        <a href="/docs#deploy">Deploy</a>
         <a href="/v1/endpoints">Endpoints</a>
         <a href="/v1/openapi.json">OpenAPI</a>
         <a href="https://github.com/shnwazdeveloper/sayamusicapi">GitHub</a>
@@ -115,13 +195,14 @@ export function landingPage(origin: string) {
         <section class="hero">
           <div class="hero-copy">
             <p class="eyebrow">Cloudflare edge music API</p>
-            <h1>SayaMusicAPI</h1>
+            <h1>Saya Music API</h1>
             <p class="lede">
-              Legal music search, metadata, artwork, previews, and open/free stream resolution from public provider APIs.
+              A docs-first music API for legal search, metadata, artwork, previews, open streams, public radio, and free-source discovery from the Cloudflare edge.
             </p>
             <div class="actions">
               <a class="button primary" href="/docs">Open docs</a>
               <a class="button" href="/v1/endpoints">View endpoints</a>
+              <a class="button" href="/docs#deploy">Cloudflare deploy</a>
             </div>
             <div class="hero-chips" aria-label="Fast links">
               <a href="/v1/deezer/search/tracks?q=believer">Deezer tracks</a>
@@ -147,6 +228,19 @@ export function landingPage(origin: string) {
               <span></span><span></span><span></span><span></span><span></span>
             </div>
           </aside>
+        </section>
+
+        <section class="tab-overview" id="docs-tabs" aria-label="Documentation tabs preview">
+          <div class="tab-copy">
+            <p class="eyebrow">Docs page</p>
+            <h2>All API tabs in one place.</h2>
+            <p>
+              Saya Music API keeps quickstart, search, media helpers, providers, live examples, endpoint registry, and Cloudflare deployment steps together on the docs page.
+            </p>
+          </div>
+          <div class="tab-grid">
+            ${docsTabs()}
+          </div>
         </section>
 
         <section class="stats-band" aria-label="API highlights">
@@ -181,6 +275,19 @@ export function landingPage(origin: string) {
           </div>
         </section>
 
+        <section class="route-showcase" aria-label="API route examples">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Live routes</p>
+              <h2>Start with the tabs developers actually need.</h2>
+            </div>
+            <a class="button compact" href="/docs#examples">More examples</a>
+          </div>
+          <div class="route-grid">
+            ${routeCards(origin)}
+          </div>
+        </section>
+
         <section class="section-grid">
           <article>
             <h2>Search Surface</h2>
@@ -201,9 +308,12 @@ export function landingPage(origin: string) {
 }
 
 export function docsPage(origin: string) {
+  const aggregateExample = `${origin}/v1/search/tracks?q=believer`;
   const appleExample = `${origin}/v1/apple/search/songs?q=believer`;
   const deezerExample = `${origin}/v1/deezer/search/tracks?q=believer`;
   const openverseExample = `${origin}/v1/openverse/search/audio?q=piano`;
+  const previewExample = `${origin}/v1/media/preview?q=believer`;
+  const streamExample = `${origin}/v1/media/stream?source=audius&id=TRACK_ID`;
   const diagnosticsExample = `${origin}/v1/diagnostics/routes`;
 
   return `<!doctype html>
@@ -218,25 +328,80 @@ export function docsPage(origin: string) {
       ${nav()}
       <main class="docs-shell">
         <aside class="docs-aside" aria-label="Documentation sections">
-          <a href="#start">Start</a>
-          <a href="#policy">Limits</a>
-          <a href="#providers">Providers</a>
-          <a href="#diagnostics">Diagnostics</a>
-          <a href="#examples">Examples</a>
-          <a href="#endpoints">Endpoints</a>
+          ${docsTabs()}
         </aside>
 
         <article class="docs-content">
           <header class="docs-hero" id="start">
             <p class="eyebrow">Documentation</p>
-            <h1>${endpointCount} endpoint music API</h1>
+            <h1>Saya Music API docs</h1>
             <p>
-              Use the public hosted Worker or deploy your own copy. JSON endpoints live under <code>/v1</code>; the homepage and this docs page are the UI layer. The registry now publishes <strong>${endpointCount}</strong> routes across <strong>${providerCount()}</strong> provider groups.
+              Use the hosted Cloudflare Worker or deploy your own copy. JSON endpoints live under <code>/v1</code>; this docs page collects every main tab for quickstart, search, media, providers, examples, endpoint registry, and Cloudflare deployment. The registry publishes <strong>${endpointCount}</strong> routes across <strong>${providerCount()}</strong> provider groups.
             </p>
+            <nav class="doc-tabs" aria-label="Documentation tabs">
+              ${docsTabs()}
+            </nav>
             <div class="route-flow" aria-hidden="true">
               <span></span><span></span><span></span><span></span><span></span>
             </div>
           </header>
+
+          <section class="doc-section" id="quickstart">
+            <div class="section-heading">
+              <h2>Quickstart</h2>
+              <a class="button compact" href="/v1">API root</a>
+            </div>
+            <p>
+              Start with one search route, then move into provider-specific tabs when you need exact source behavior. Every route returns JSON and public CORS headers.
+            </p>
+            <div class="code-grid">
+              <pre><code>curl "${escapeHtml(aggregateExample)}"</code></pre>
+              <pre><code>curl "${escapeHtml(origin)}/health"</code></pre>
+              <pre><code>curl "${escapeHtml(origin)}/v1/endpoints"</code></pre>
+            </div>
+          </section>
+
+          <section class="doc-section" id="search-tabs">
+            <div class="section-heading">
+              <h2>Search Tabs</h2>
+              <a class="button compact" href="/v1/search/tracks?q=believer">Try aggregate</a>
+            </div>
+            <p>
+              These tabs cover the most useful search surfaces: aggregate search, direct provider lookup, open audio, and public radio streams.
+            </p>
+            <div class="route-grid">
+              ${routeCards(origin)}
+            </div>
+          </section>
+
+          <section class="doc-section" id="media-tabs">
+            <div class="section-heading">
+              <h2>Media Helper Tabs</h2>
+              <a class="button compact" href="/v1/quality">Quality policy</a>
+            </div>
+            <div class="media-tabs">
+              <article>
+                <span>Preview</span>
+                <code>/v1/media/preview</code>
+                <p>Find legal short preview clips from supported providers.</p>
+              </article>
+              <article>
+                <span>Stream</span>
+                <code>/v1/media/stream</code>
+                <p>Resolve open streams where the provider grants public access.</p>
+              </article>
+              <article>
+                <span>Download</span>
+                <code>/v1/media/download</code>
+                <p>Return public/free file links, especially Internet Archive item files.</p>
+              </article>
+              <article>
+                <span>Artwork</span>
+                <code>/v1/media/artwork</code>
+                <p>Resolve artwork from Apple/iTunes and Cover Art Archive sources.</p>
+              </article>
+            </div>
+          </section>
 
           <section class="doc-section" id="policy">
             <h2>Free Limit Policy</h2>
@@ -252,6 +417,9 @@ export function docsPage(origin: string) {
             <div class="section-heading">
               <h2>Provider Groups</h2>
               <a class="button compact" href="/v1/sources">Source JSON</a>
+            </div>
+            <div class="provider-tabs" aria-label="Provider endpoint tabs">
+              ${providerTabs()}
             </div>
             <div class="provider-grid">
               ${endpointGroups()}
@@ -274,9 +442,12 @@ export function docsPage(origin: string) {
           <section class="doc-section" id="examples">
             <h2>Examples</h2>
             <div class="code-grid">
+              <pre><code>curl "${escapeHtml(aggregateExample)}"</code></pre>
               <pre><code>curl "${escapeHtml(appleExample)}"</code></pre>
               <pre><code>curl "${escapeHtml(deezerExample)}"</code></pre>
               <pre><code>curl "${escapeHtml(openverseExample)}"</code></pre>
+              <pre><code>curl "${escapeHtml(previewExample)}"</code></pre>
+              <pre><code>curl "${escapeHtml(streamExample)}"</code></pre>
               <pre><code>curl "${escapeHtml(diagnosticsExample)}"</code></pre>
             </div>
           </section>
@@ -300,6 +471,25 @@ export function docsPage(origin: string) {
                   ${endpointRows(endpoints)}
                 </tbody>
               </table>
+            </div>
+          </section>
+
+          <section class="doc-section" id="deploy">
+            <div class="section-heading">
+              <h2>Cloudflare Deploy</h2>
+              <a class="button compact" href="https://github.com/shnwazdeveloper/sayamusicapi">GitHub repo</a>
+            </div>
+            <p>
+              The repository is already configured for Cloudflare Workers with <code>wrangler.jsonc</code>. Push the repo to GitHub, then deploy with Wrangler from the project folder.
+            </p>
+            <div class="deploy-steps">
+              <pre><code>npm install
+npm run typecheck
+npm test
+npm run deploy</code></pre>
+              <div class="notice">
+                Optional: set <code>AUDIUS_API_KEY</code> with <code>wrangler secret put AUDIUS_API_KEY</code> for more reliable Audius public API access.
+              </div>
             </div>
           </section>
         </article>
@@ -462,6 +652,119 @@ pre {
   gap: 48px;
   padding: 8vh 6vw 6vh;
   border-bottom: 1px solid var(--line);
+}
+
+.tab-overview,
+.route-showcase {
+  padding: 56px 6vw;
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+}
+
+.tab-overview {
+  display: grid;
+  grid-template-columns: minmax(240px, 0.8fr) 1.2fr;
+  gap: 24px;
+  align-items: center;
+}
+
+.tab-copy h2,
+.route-showcase h2 {
+  margin: 0;
+  max-width: 720px;
+  font-size: clamp(32px, 4vw, 58px);
+  line-height: 1;
+}
+
+.tab-copy p:last-child {
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.tab-grid,
+.doc-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.tab-grid a,
+.doc-tabs a,
+.provider-tab,
+.route-card,
+.media-tabs article {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+.tab-grid a,
+.doc-tabs a {
+  padding: 12px 14px;
+  font-weight: 800;
+  transition: transform 180ms ease, border-color 180ms ease, background-color 180ms ease;
+}
+
+.tab-grid a:nth-child(3n),
+.doc-tabs a:nth-child(3n) {
+  background: #e8f2ef;
+}
+
+.tab-grid a:nth-child(3n + 1),
+.doc-tabs a:nth-child(3n + 1) {
+  background: #f6e9e6;
+}
+
+.tab-grid a:nth-child(3n + 2),
+.doc-tabs a:nth-child(3n + 2) {
+  background: #f8f1e3;
+}
+
+.tab-grid a:hover,
+.doc-tabs a:hover {
+  transform: translateY(-2px);
+  border-color: var(--black);
+}
+
+.route-grid,
+.media-tabs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 12px;
+}
+
+.route-card,
+.media-tabs article {
+  padding: 18px;
+}
+
+.route-card span,
+.media-tabs span {
+  display: block;
+  margin-bottom: 12px;
+  font-weight: 900;
+}
+
+.route-card code,
+.media-tabs code {
+  display: block;
+  margin-bottom: 12px;
+  overflow-wrap: anywhere;
+  color: var(--green);
+  font-size: 13px;
+}
+
+.route-card p,
+.media-tabs p {
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.route-card a {
+  display: inline-flex;
+  margin-top: 4px;
+  color: var(--blue);
+  font-weight: 800;
 }
 
 .hero-copy,
@@ -745,11 +1048,16 @@ h1 {
   border-radius: 8px;
   padding: clamp(22px, 4vw, 42px);
   background: var(--panel);
+  scroll-margin-top: 92px;
 }
 
 .docs-hero h1 {
   font-size: clamp(36px, 5vw, 72px);
   line-height: 1;
+}
+
+.docs-hero .doc-tabs {
+  margin-top: 24px;
 }
 
 .route-flow {
@@ -785,6 +1093,42 @@ h1 {
   grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
   gap: 12px;
   margin-top: 18px;
+}
+
+.provider-tabs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.provider-tab {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  transition: transform 180ms ease, border-color 180ms ease;
+}
+
+.provider-tab:hover {
+  transform: translateY(-2px);
+  border-color: var(--black);
+}
+
+.provider-tab span {
+  font-weight: 900;
+}
+
+.provider-tab strong {
+  width: max-content;
+  border-radius: 8px;
+  padding: 5px 9px;
+  color: #fff;
+  background: var(--black);
+}
+
+.provider-tab small {
+  color: var(--muted);
+  line-height: 1.5;
 }
 
 .provider-card {
@@ -842,6 +1186,23 @@ h1 {
 .code-grid pre {
   margin: 0;
   padding: 16px;
+  overflow: auto;
+  background: var(--black);
+  color: #e6ece8;
+}
+
+.deploy-steps {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 0.7fr);
+  gap: 14px;
+  align-items: stretch;
+}
+
+.deploy-steps pre {
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 18px;
   overflow: auto;
   background: var(--black);
   color: #e6ece8;
@@ -942,6 +1303,8 @@ th {
 @media (max-width: 860px) {
   .topbar,
   .hero,
+  .tab-overview,
+  .route-showcase,
   .section-grid,
   .docs-shell,
   .source-cloud {
@@ -957,10 +1320,12 @@ th {
   }
 
   .hero,
+  .tab-overview,
   .section-grid,
   .docs-shell,
   .source-cloud,
-  .stats-band {
+  .stats-band,
+  .deploy-steps {
     grid-template-columns: 1fr;
   }
 

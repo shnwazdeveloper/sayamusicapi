@@ -8,6 +8,7 @@ This project intentionally does not scrape unauthorized song files or bypass cop
 
 - 900+ GET endpoints across Apple/iTunes, MusicBrainz, Cover Art Archive, Internet Archive, Audius, Deezer, Radio Browser, Openverse, Wikidata, Wikimedia, ListenBrainz, GitHub, and Odesli.
 - Landing page at `/` and documentation page at `/docs`.
+- Docs-first website with tabs for quickstart, search, media helpers, providers, examples, endpoint registry, and Cloudflare deploy.
 - No API-side quotas, API keys, paid tiers, or gateway rate limits added by SayaMusicAPI.
 - Cloudflare Workers deployment with Wrangler.
 - CORS enabled for public apps.
@@ -44,6 +45,8 @@ You can omit `limit` or use `limit=all`. SayaMusicAPI will use the upstream prov
 ## Cloudflare Deploy
 
 ```bash
+npm run typecheck
+npm test
 npm run deploy
 ```
 
