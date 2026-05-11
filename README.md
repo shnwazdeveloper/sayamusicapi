@@ -9,7 +9,7 @@ This project intentionally does not scrape unauthorized song files or bypass cop
 - 900+ GET endpoints across Apple/iTunes, MusicBrainz, Cover Art Archive, Internet Archive, Audius, Deezer, Radio Browser, Openverse, Wikidata, Wikimedia, ListenBrainz, GitHub, and Odesli.
 - Landing page at `/` and documentation page at `/docs`.
 - Docs-first website with tabs for quickstart, search, media helpers, providers, examples, endpoint registry, and Cloudflare deploy.
-- No API-side quotas, API keys, paid tiers, or gateway rate limits added by SayaMusicAPI.
+- No API-side quotas, API keys, paid tiers, gateway rate limits, or result caps added by SayaMusicAPI.
 - Cloudflare Workers deployment with Wrangler.
 - CORS enabled for public apps.
 - Built-in `/v1/endpoints` registry and `/v1/openapi.json`.
@@ -40,7 +40,7 @@ curl "http://localhost:8787/v1/musicbrainz/search/recordings?q=dua%20lipa"
 curl "http://localhost:8787/v1/archive/search/music?q=jazz"
 ```
 
-You can omit `limit` or use `limit=all`. SayaMusicAPI will use the upstream provider's public maximum page size when that provider requires one.
+You can omit `limit` or pass your own value. SayaMusicAPI does not clamp `limit` to an API-side maximum; upstream providers may still enforce their own public paging rules.
 
 ## Cloudflare Deploy
 
@@ -84,6 +84,8 @@ GET /v1/media/artwork?provider=cover-art&release=...
 npm test
 npm run typecheck
 npm run endpoints
+npm run audit:endpoints
+npm run audit:endpoints:smoke
 ```
 
 ## License

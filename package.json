@@ -9,7 +9,9 @@
     "deploy": "wrangler deploy",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "endpoints": "tsx scripts/list-endpoints.ts"
+    "endpoints": "tsx scripts/list-endpoints.ts",
+    "audit:endpoints": "tsx scripts/audit-endpoints.ts",
+    "audit:endpoints:smoke": "tsx scripts/audit-endpoints.ts --smoke --concurrency=8 --timeout=15000"
   },
   "keywords": [
     "music",
@@ -32,4 +34,3 @@
     "wrangler": "^4.50.0"
   }
 }
-

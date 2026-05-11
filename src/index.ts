@@ -99,8 +99,10 @@ app.onError((error, c) => jsonError(c, error));
 app.notFound((c) =>
   jsonError(
     c,
-    new ApiError(404, "Endpoint not found", {
-      docs: "/docs"
+    new ApiError(404, "Endpoint not found. Use /v1/endpoints for the documented working routes.", {
+      docs: "/docs",
+      endpoints: "/v1/endpoints",
+      endpointCount
     })
   )
 );
@@ -298,7 +300,7 @@ app.get("/v1/quality", (c) =>
     policy:
       "This API resolves legal metadata, previews, artwork, open streams, and public/free downloads. It does not bypass paywalls or DRM.",
     apiSideLimits:
-      "No API-side quota, paid tier, or gateway rate limit is added by SayaMusicAPI. Provider result page sizes use each upstream public maximum where required.",
+      "No API-side quota, paid tier, gateway rate limit, or result cap is added by SayaMusicAPI. The optional limit query is not capped by this API; upstream providers may still enforce their own public limits.",
     tiers: [
       {
         source: "apple",

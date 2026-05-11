@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import app from "../src/index";
 import { endpointCount, endpoints } from "../src/endpoints";
+import { limit } from "../src/http";
 
 describe("SayaMusicAPI", () => {
   it("publishes more than 300 endpoints", () => {
@@ -14,6 +15,16 @@ describe("SayaMusicAPI", () => {
     const body = (await response.json()) as any;
     expect(body.ok).toBe(true);
     expect(body.data.endpointCount).toBe(endpointCount);
+  });
+
+  it("does not clamp the optional limit query on the API side", () => {
+    const context = {
+      req: {
+        query: (key: string) => (key === "limit" ? "9999" : undefined)
+      }
+    };
+
+    expect(limit(context as any, 100, 100)).toBe(9999);
   });
 
   it("serves the landing page and docs page", async () => {

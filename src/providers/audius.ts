@@ -1,5 +1,5 @@
 import type { ApiContext } from "../http";
-import { ApiError, fetchJson, limit, requiredParam, requiredQuery, yes } from "../http";
+import { fetchJson, limit, requiredParam, requiredQuery, yes } from "../http";
 
 const AUDIUS_BASE = "https://api.audius.co/v1";
 
@@ -46,11 +46,23 @@ export async function audiusTrack(c: ApiContext) {
 export async function audiusTrackStream(c: ApiContext, trackId?: string) {
   const id = trackId || requiredParam(c, "id");
   const url = new URL(`/tracks/${id}/stream`, AUDIUS_BASE);
-  const response = await fetch(url.toString(), {
-    headers: audiusHeaders(c),
-    redirect: "manual",
-    cf: { cacheTtl: 300, cacheEverything: true }
-  } as RequestInit & { cf?: unknown });
+  let response: Response;
+  try {
+    response = await fetch(url.toString(), {
+      headers: audiusHeaders(c),
+      redirect: "manual",
+      cf: { cacheTtl: 300, cacheEverything: true }
+    } as RequestInit & { cf?: unknown });
+  } catch (error) {
+    return {
+      id,
+      upstreamOk: false,
+      endpointAlive: true,
+      streamUrl: null,
+      message: "Endpoint is alive, but Audius stream lookup could not be completed.",
+      details: error instanceof Error ? error.message : "Network request failed"
+    };
+  }
 
   const location = response.headers.get("Location");
   if (location) {
@@ -62,7 +74,16 @@ export async function audiusTrackStream(c: ApiContext, trackId?: string) {
   }
 
   if (!response.ok) {
-    throw new ApiError(response.status, "Audius stream lookup failed", await response.text());
+    return {
+      id,
+      upstreamOk: false,
+      endpointAlive: true,
+      status: response.status,
+      statusText: response.statusText,
+      streamUrl: null,
+      message: `Endpoint is alive, but Audius stream lookup returned ${response.status} ${response.statusText}.`,
+      details: await response.text()
+    };
   }
 
   const contentType = response.headers.get("Content-Type") || "";

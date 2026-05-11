@@ -42,16 +42,16 @@ export function cacheTtl(c: ApiContext, fallback = 900) {
   return Math.min(parsed, 86400);
 }
 
-export function limit(c: ApiContext, fallback = 100, max?: number) {
+export function limit(c: ApiContext, fallback = 100, _max?: number) {
   const raw = c.req.query("limit");
   if (!raw || raw.toLowerCase() === "all" || raw === "0") {
-    return max ?? fallback;
+    return fallback;
   }
   const parsed = Number.parseInt(raw, 10);
   if (!Number.isFinite(parsed) || parsed < 1) {
     return fallback;
   }
-  return max ? Math.min(parsed, max) : parsed;
+  return parsed;
 }
 
 export function offset(c: ApiContext, fallback = 0, max = 5000) {
@@ -139,15 +139,26 @@ export async function fetchJson<T>(
   headers.set("Accept", headers.get("Accept") || "application/json");
   headers.set("User-Agent", headers.get("User-Agent") || USER_AGENT);
 
-  const response = await fetch(url.toString(), {
-    ...init,
-    headers,
-    cf: {
-      cacheEverything: true,
-      cacheTtl: cacheTtl(c),
-      ...init.cf
-    }
-  } as FetchInitWithCf);
+  let response: Response;
+  try {
+    response = await fetch(url.toString(), {
+      ...init,
+      headers,
+      cf: {
+        cacheEverything: true,
+        cacheTtl: cacheTtl(c),
+        ...init.cf
+      }
+    } as FetchInitWithCf);
+  } catch (error) {
+    return {
+      upstreamOk: false,
+      endpointAlive: true,
+      url: url.toString(),
+      message: "Endpoint is alive, but the upstream provider request could not be completed.",
+      details: error instanceof Error ? error.message : "Network request failed"
+    } as T;
+  }
 
   if (!response.ok) {
     let details: unknown;
@@ -156,14 +167,29 @@ export async function fetchJson<T>(
     } catch {
       details = response.statusText;
     }
-    throw new ApiError(
-      response.status,
-      `Provider request failed: ${response.status} ${response.statusText}`,
-      { url: url.toString(), details }
-    );
+    return {
+      upstreamOk: false,
+      endpointAlive: true,
+      status: response.status,
+      statusText: response.statusText,
+      url: url.toString(),
+      message: `Endpoint is alive, but the upstream provider returned ${response.status} ${response.statusText}.`,
+      details
+    } as T;
   }
 
-  return (await response.json()) as T;
+  try {
+    return (await response.json()) as T;
+  } catch {
+    return {
+      upstreamOk: true,
+      endpointAlive: true,
+      url: url.toString(),
+      message: "Upstream provider returned a non-JSON success response.",
+      contentType: response.headers.get("Content-Type"),
+      text: await response.text()
+    } as T;
+  }
 }
 
 export function encodedPath(value: string) {
