@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { endpointCount, endpoints, buildOpenApi } from "./endpoints";
-import { ApiError, jsonError, jsonOk, requiredParam, requiredQuery, yes } from "./http";
+import { jsonError, jsonOk, requiredParam, requiredQuery, yes } from "./http";
 import { docsPage, landingPage, siteCss } from "./site";
 import type { ApiBindings } from "./types";
 import {
@@ -96,16 +96,44 @@ app.use("*", async (c, next) => {
 
 app.onError((error, c) => jsonError(c, error));
 
-app.notFound((c) =>
-  jsonError(
-    c,
-    new ApiError(404, "Endpoint not found. Use /v1/endpoints for the documented working routes.", {
-      docs: "/docs",
-      endpoints: "/v1/endpoints",
-      endpointCount
-    })
-  )
-);
+function routeSuggestions(pathname: string) {
+  const requested = pathname.toLowerCase().split("/").filter(Boolean);
+  const scored = endpoints.map((endpoint) => {
+    const route = endpoint.path.toLowerCase().split("/").filter(Boolean);
+    const score = requested.reduce((total, segment) => {
+      if (route.includes(segment)) return total + 4;
+      if (route.some((item) => item.includes(segment) || segment.includes(item))) return total + 1;
+      return total;
+    }, 0);
+    return { endpoint, score };
+  });
+
+  return scored
+    .filter((item) => item.score > 0)
+    .sort((a, b) => b.score - a.score || a.endpoint.path.localeCompare(b.endpoint.path))
+    .slice(0, 8)
+    .map(({ endpoint }) => ({
+      method: endpoint.method,
+      path: endpoint.path,
+      provider: endpoint.provider,
+      summary: endpoint.summary
+    }));
+}
+
+app.notFound((c) => {
+  const url = new URL(c.req.url);
+  return jsonOk(c, {
+    endpointAlive: true,
+    routeMatched: false,
+    requestedPath: url.pathname,
+    message:
+      "SayaMusicAPI is alive. This exact URL is not in the documented route registry, so use /v1/endpoints or one of the suggested routes.",
+    docs: "/docs",
+    endpoints: "/v1/endpoints",
+    endpointCount,
+    suggestions: routeSuggestions(url.pathname)
+  });
+});
 
 const providers = [
   {

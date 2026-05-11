@@ -98,6 +98,18 @@ describe("SayaMusicAPI", () => {
     expect(diagnosticsBody.data.providers.deezer).toBeGreaterThan(0);
   });
 
+  it("keeps unknown paths alive with endpoint suggestions", async () => {
+    const response = await app.request("/v1/not-real");
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as any;
+    expect(body.ok).toBe(true);
+    expect(body.error).toBeUndefined();
+    expect(body.data.endpointAlive).toBe(true);
+    expect(body.data.routeMatched).toBe(false);
+    expect(body.data.endpointCount).toBe(endpointCount);
+    expect(body.data.endpoints).toBe("/v1/endpoints");
+  });
+
   it("routes new providers instead of falling through to 404", async () => {
     const smokePaths = [
       "/v1/deezer/search/tracks",

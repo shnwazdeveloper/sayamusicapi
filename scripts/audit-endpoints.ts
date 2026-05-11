@@ -168,14 +168,20 @@ async function smoke(endpoint: EndpointDoc, path: string): Promise<Pick<AuditRes
       setTimeout(() => reject(new Error(`Smoke timeout after ${timeoutMs}ms`)), timeoutMs)
     )
   ]);
+
+  let body: any;
+  try {
+    body = await response.clone().json();
+  } catch {
+    body = {};
+  }
+
+  if (body?.data?.routeMatched === false) {
+    return { status: response.status, reason: "dead route: alive fallback handled this path" };
+  }
+
   if (response.status === 404) {
-    let body: any;
-    try {
-      body = await response.json();
-    } catch {
-      body = {};
-    }
-    if (body?.error?.message === "Endpoint not found") {
+    if (body?.error?.message?.includes("Endpoint not found")) {
       return { status: response.status, reason: "dead route: endpoint not found" };
     }
   }
