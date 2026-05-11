@@ -20,7 +20,10 @@ describe("SayaMusicAPI", () => {
     const landing = await app.request("/");
     expect(landing.status).toBe(200);
     expect(landing.headers.get("content-type")).toContain("text/html");
-    expect(await landing.text()).toContain("SayaMusicAPI");
+    const landingHtml = await landing.text();
+    expect(landingHtml).toContain("SayaMusicAPI");
+    expect(landingHtml).not.toContain("Try a search");
+    expect(landingHtml).toContain("header-motion");
 
     const docs = await app.request("/docs");
     expect(docs.status).toBe(200);

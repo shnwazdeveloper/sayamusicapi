@@ -91,6 +91,9 @@ function nav() {
         <a href="/v1/openapi.json">OpenAPI</a>
         <a href="https://github.com/shnwazdeveloper/sayamusicapi">GitHub</a>
       </div>
+      <div class="header-motion" aria-hidden="true">
+        <span></span><span></span><span></span><span></span>
+      </div>
     </nav>
   `;
 }
@@ -116,17 +119,15 @@ export function landingPage(origin: string) {
             <p class="lede">
               Legal music search, metadata, artwork, previews, and open/free stream resolution from public provider APIs.
             </p>
-          <div class="actions">
+            <div class="actions">
               <a class="button primary" href="/docs">Open docs</a>
               <a class="button" href="/v1/endpoints">View endpoints</a>
             </div>
-            <form class="api-form" action="/v1/search/tracks" method="get">
-              <label for="hero-q">Try a search</label>
-              <div>
-                <input id="hero-q" name="q" value="believer" autocomplete="off">
-                <button type="submit">Run</button>
-              </div>
-            </form>
+            <div class="hero-chips" aria-label="Fast links">
+              <a href="/v1/deezer/search/tracks?q=believer">Deezer tracks</a>
+              <a href="/v1/openverse/search/audio?q=piano">Open audio</a>
+              <a href="/v1/radio-browser/stations/search?q=lofi">Radio streams</a>
+            </div>
           </div>
           <aside class="console-panel" aria-label="API example">
             <div class="console-head">
@@ -337,6 +338,7 @@ body {
   color: var(--ink);
   background: var(--paper);
   letter-spacing: 0;
+  overflow-x: hidden;
 }
 
 a {
@@ -368,6 +370,11 @@ pre {
   align-items: center;
   gap: 10px;
   font-weight: 800;
+  transition: transform 180ms ease;
+}
+
+.brand:hover {
+  transform: translateY(-2px);
 }
 
 .brand-mark {
@@ -377,6 +384,7 @@ pre {
   border-radius: 8px;
   background:
     linear-gradient(90deg, var(--green) 0 33%, var(--gold) 33% 66%, var(--coral) 66%);
+  animation: markSlide 3s steps(3) infinite;
 }
 
 .nav-links {
@@ -399,6 +407,40 @@ pre {
 .button:hover {
   transform: translateY(-2px);
   border-color: var(--ink);
+}
+
+.header-motion {
+  position: absolute;
+  left: 6vw;
+  right: 6vw;
+  bottom: -1px;
+  display: grid;
+  grid-template-columns: 2fr 1fr 1.4fr 0.8fr;
+  gap: 8px;
+  height: 3px;
+  pointer-events: none;
+}
+
+.header-motion span {
+  border-radius: 999px;
+  background: var(--green);
+  transform-origin: left center;
+  animation: headerRail 1.9s ease-in-out infinite alternate;
+}
+
+.header-motion span:nth-child(2) {
+  background: var(--gold);
+  animation-delay: 110ms;
+}
+
+.header-motion span:nth-child(3) {
+  background: var(--coral);
+  animation-delay: 220ms;
+}
+
+.header-motion span:nth-child(4) {
+  background: var(--blue);
+  animation-delay: 330ms;
 }
 
 .button.primary {
@@ -460,50 +502,34 @@ h1 {
   margin-top: 32px;
 }
 
-.api-form {
-  display: grid;
+.hero-chips {
+  display: flex;
+  flex-wrap: wrap;
   gap: 10px;
-  max-width: 520px;
   margin-top: 28px;
 }
 
-.api-form label {
-  color: var(--muted);
-  font-size: 13px;
-  font-weight: 800;
-}
-
-.api-form div {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  border: 1px solid var(--black);
+.hero-chips a {
+  border: 1px solid var(--line);
   border-radius: 8px;
-  overflow: hidden;
+  padding: 10px 12px;
   background: var(--panel);
+  color: var(--muted);
+  font-weight: 700;
+  animation: chipFloat 2.6s ease-in-out infinite alternate;
 }
 
-.api-form input,
-.api-form button {
-  min-height: 48px;
-  border: 0;
-  font: inherit;
+.hero-chips a:nth-child(2) {
+  animation-delay: 160ms;
 }
 
-.api-form input {
-  min-width: 0;
-  padding: 0 14px;
-  background: var(--panel);
+.hero-chips a:nth-child(3) {
+  animation-delay: 320ms;
 }
 
-.api-form button {
-  padding: 0 18px;
-  color: #fff;
-  background: var(--green);
-  cursor: pointer;
-}
-
-.api-form button:hover {
-  background: var(--black);
+.hero-chips a:hover {
+  color: var(--ink);
+  border-color: var(--black);
 }
 
 .console-panel {
@@ -535,7 +561,9 @@ h1 {
 .console-panel pre {
   margin: 0;
   padding: 22px;
-  overflow: auto;
+  overflow-x: hidden;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
   color: #e6ece8;
   background: var(--black);
   font-size: 14px;
@@ -884,6 +912,21 @@ th {
 @keyframes ticker {
   from { transform: translateX(0); }
   to { transform: translateX(-50%); }
+}
+
+@keyframes markSlide {
+  from { background-position: 0 0; }
+  to { background-position: 24px 0; }
+}
+
+@keyframes headerRail {
+  from { transform: scaleX(0.2); }
+  to { transform: scaleX(1); }
+}
+
+@keyframes chipFloat {
+  from { transform: translateY(0); }
+  to { transform: translateY(-5px); }
 }
 
 @keyframes sourceStep {
