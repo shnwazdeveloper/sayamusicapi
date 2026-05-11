@@ -43,11 +43,17 @@ describe("SayaMusicAPI", () => {
     expect(docsHtml).not.toContain("route-flow");
     expect(docsHtml).not.toContain("providerRail");
     expect(docsHtml).not.toContain(".docs-hero,\n.doc-section {\n  animation");
+    expect(docsHtml).toContain('class="docs-tab-board"');
+    expect(docsHtml).toContain('class="doc-tab-card"');
+    expect(docsHtml).not.toContain('class="doc-tabs"');
 
     const css = await app.request("/site.css");
     const cssText = await css.text();
     expect(cssText).not.toMatch(/glow|box-shadow|drop-shadow|text-shadow|filter:/i);
     expect(cssText).toContain("@keyframes");
+    expect(cssText).toContain(".docs-page *");
+    expect(cssText).not.toContain(".doc-tabs");
+    expect(cssText).not.toContain(".provider-tab:nth-child");
   });
 
   it("serves the endpoint registry", async () => {

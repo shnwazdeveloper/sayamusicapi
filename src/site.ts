@@ -55,6 +55,19 @@ const docTabs = [
   ["deploy", "Deploy"]
 ] as const;
 
+const docTabDescriptions: Record<(typeof docTabs)[number][0], string> = {
+  start: "Docs home",
+  quickstart: "First calls",
+  "search-tabs": "Search routes",
+  "media-tabs": "Media helpers",
+  policy: "Free policy",
+  providers: "Source groups",
+  diagnostics: "Alive checks",
+  examples: "Curl samples",
+  endpoints: "Route table",
+  deploy: "Cloudflare"
+};
+
 function sourcePills() {
   return sourceNames.map((source) => `<span>${escapeHtml(source)}</span>`).join("\n");
 }
@@ -62,6 +75,18 @@ function sourcePills() {
 function docsTabs() {
   return docTabs
     .map(([id, label]) => `<a href="#${id}">${escapeHtml(label)}</a>`)
+    .join("\n");
+}
+
+function docsTabCards() {
+  return docTabs
+    .map(
+      ([id, label]) => `
+        <a class="doc-tab-card" href="#${id}">
+          <span>${escapeHtml(label)}</span>
+          <small>${escapeHtml(docTabDescriptions[id])}</small>
+        </a>`
+    )
     .join("\n");
 }
 
@@ -99,9 +124,11 @@ function providerTabs() {
     .map(([provider, items]) => {
       return `
         <a class="provider-tab" href="#endpoints">
-          <span>${escapeHtml(provider)}</span>
-          <strong>${items.length}</strong>
-          <small>Documented routes in the endpoint registry</small>
+          <span>
+            <b>${escapeHtml(provider)}</b>
+            <small>Endpoint registry group</small>
+          </span>
+          <strong>${items.length} routes</strong>
         </a>`;
     })
     .join("");
@@ -310,7 +337,7 @@ export function docsPage(origin: string) {
         "Documentation for SayaMusicAPI endpoints, provider routes, legal media policy, and Cloudflare deployment."
       )}
     </head>
-    <body>
+    <body class="docs-page">
       ${nav()}
       <main class="docs-shell">
         <aside class="docs-aside" aria-label="Documentation sections">
@@ -324,10 +351,11 @@ export function docsPage(origin: string) {
             <p>
               Use the hosted Cloudflare Worker or deploy your own copy. JSON endpoints live under <code>/v1</code>; this docs page collects every main tab for quickstart, search, media, providers, examples, endpoint registry, and Cloudflare deployment. The registry publishes <strong>${endpointCount}</strong> routes across <strong>${providerCount()}</strong> provider groups.
             </p>
-            <nav class="doc-tabs" aria-label="Documentation tabs">
-              ${docsTabs()}
-            </nav>
           </header>
+
+          <nav class="docs-tab-board" aria-label="Documentation tabs">
+            ${docsTabCards()}
+          </nav>
 
           <section class="doc-section" id="quickstart">
             <div class="section-heading">
@@ -511,6 +539,12 @@ body {
   overflow-x: hidden;
 }
 
+.docs-page *,
+.docs-page *::before,
+.docs-page *::after {
+  animation: none !important;
+}
+
 a {
   color: inherit;
   text-decoration: none;
@@ -657,15 +691,14 @@ pre {
   line-height: 1.6;
 }
 
-.tab-grid,
-.doc-tabs {
+.tab-grid {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
 }
 
 .tab-grid a,
-.doc-tabs a,
+.doc-tab-card,
 .provider-tab,
 .route-card,
 .media-tabs article {
@@ -675,29 +708,26 @@ pre {
 }
 
 .tab-grid a,
-.doc-tabs a {
+.doc-tab-card {
   padding: 12px 14px;
   font-weight: 800;
   transition: transform 180ms ease, border-color 180ms ease, background-color 180ms ease;
 }
 
-.tab-grid a:nth-child(3n),
-.doc-tabs a:nth-child(3n) {
+.tab-grid a:nth-child(3n) {
   background: #e8f2ef;
 }
 
-.tab-grid a:nth-child(3n + 1),
-.doc-tabs a:nth-child(3n + 1) {
+.tab-grid a:nth-child(3n + 1) {
   background: #f6e9e6;
 }
 
-.tab-grid a:nth-child(3n + 2),
-.doc-tabs a:nth-child(3n + 2) {
+.tab-grid a:nth-child(3n + 2) {
   background: #f8f1e3;
 }
 
 .tab-grid a:hover,
-.doc-tabs a:hover {
+.doc-tab-card:hover {
   transform: translateY(-2px);
   border-color: var(--black);
 }
@@ -1027,8 +1057,31 @@ h1 {
   line-height: 1;
 }
 
-.docs-hero .doc-tabs {
-  margin-top: 24px;
+.docs-tab-board {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 10px;
+}
+
+.doc-tab-card {
+  display: grid;
+  gap: 6px;
+  min-height: 74px;
+  align-content: center;
+  border-radius: 14px;
+  background: var(--panel);
+}
+
+.doc-tab-card span {
+  color: var(--ink);
+  font-size: 15px;
+}
+
+.doc-tab-card small {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.35;
 }
 
 .notice {
@@ -1047,47 +1100,46 @@ h1 {
 
 .provider-tabs {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
   gap: 12px;
   margin-top: 18px;
 }
 
 .provider-tab {
-  position: relative;
-  overflow: hidden;
   display: grid;
-  align-content: space-between;
-  gap: 8px;
-  min-height: 124px;
-  padding: 18px;
-  background: #f8f1e3;
+  align-content: start;
+  gap: 12px;
+  min-height: 112px;
+  padding: 16px;
+  background: var(--panel);
   transition: transform 180ms ease, border-color 180ms ease, background-color 180ms ease;
-}
-
-.provider-tab:nth-child(3n) {
-  background: #e8f2ef;
-}
-
-.provider-tab:nth-child(3n + 1) {
-  background: #f6e9e6;
 }
 
 .provider-tab:hover {
   transform: translateY(-2px);
   border-color: var(--black);
-  background: var(--panel);
+  background: #eef1ed;
 }
 
 .provider-tab span {
+  display: grid;
+  gap: 5px;
+}
+
+.provider-tab b {
+  font-size: 15px;
   font-weight: 900;
 }
 
 .provider-tab strong {
+  justify-self: start;
   width: max-content;
-  border-radius: 8px;
-  padding: 5px 9px;
-  color: #fff;
-  background: var(--black);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 6px 10px;
+  color: var(--ink);
+  background: #f7f8f6;
+  font-size: 13px;
 }
 
 .provider-tab small {
@@ -1111,9 +1163,10 @@ h1 {
   place-items: center;
   min-width: 36px;
   height: 32px;
-  border-radius: 8px;
-  color: #fff;
-  background: var(--black);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--ink);
+  background: #f7f8f6;
 }
 
 .provider-name {
