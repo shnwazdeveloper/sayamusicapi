@@ -24,6 +24,7 @@ const core: EndpointDoc[] = [
   ["GET", "/v1/providers", "core", "Available providers"],
   ["GET", "/v1/endpoints", "core", "Endpoint registry"],
   ["GET", "/v1/openapi.json", "core", "OpenAPI document"],
+  ["GET", "/swagger", "core", "Scalar/OpenAPI document alias"],
   ["GET", "/v1/diagnostics", "core", "Runtime diagnostics"],
   ["GET", "/v1/diagnostics/routes", "core", "Route registry diagnostics"],
   ["GET", "/v1/diagnostics/sources", "core", "Provider source diagnostics"],

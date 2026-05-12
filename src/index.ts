@@ -255,6 +255,7 @@ function welcome(origin: string) {
       docs: `${origin}/docs`,
       endpoints: `${origin}/v1/endpoints`,
       openapi: `${origin}/v1/openapi.json`,
+      swagger: `${origin}/swagger`,
       health: `${origin}/health`
     },
     examples: [
@@ -300,6 +301,7 @@ app.get("/v1/status", (c) => jsonOk(c, alive()));
 app.get("/v1/providers", (c) => jsonOk(c, providers));
 app.get("/v1/endpoints", (c) => jsonOk(c, endpoints, { count: endpointCount }));
 app.get("/v1/openapi.json", (c) => c.json(buildOpenApi(new URL(c.req.url).origin)));
+app.get("/swagger", (c) => c.json(buildOpenApi(new URL(c.req.url).origin)));
 app.get("/v1/diagnostics", (c) =>
   jsonOk(c, {
     status: "ready",

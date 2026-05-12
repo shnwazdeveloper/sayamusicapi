@@ -83,14 +83,17 @@ describe("SayaMusicAPI", () => {
     const docs = await app.request("/docs");
     expect(docs.status).toBe(200);
     const docsHtml = await docs.text();
-    expect(docsHtml).toContain("Free Access Policy");
+    expect(docsHtml).toContain("Scalar.createApiReference");
+    expect(docsHtml).toContain('"layout": "modern"');
+    expect(docsHtml).toContain('"theme": "deepSpace"');
+    expect(docsHtml).toContain('"url": "/swagger"');
+    expect(docsHtml).toContain("https://cdn.jsdelivr.net/npm/@scalar/api-reference");
     expect(docsHtml).not.toContain("AUDIUS_API_KEY");
     expect(docsHtml).not.toContain("wrangler secret put");
     expect(docsHtml).not.toContain("route-flow");
     expect(docsHtml).not.toContain("providerRail");
-    expect(docsHtml).not.toContain(".docs-hero,\n.doc-section {\n  animation");
-    expect(docsHtml).toContain('class="docs-tab-board"');
-    expect(docsHtml).toContain('class="doc-tab-card"');
+    expect(docsHtml).not.toContain('class="docs-tab-board"');
+    expect(docsHtml).not.toContain('class="doc-tab-card"');
     expect(docsHtml).not.toContain('class="doc-tabs"');
 
     const css = await app.request("/site.css");
@@ -108,6 +111,7 @@ describe("SayaMusicAPI", () => {
     const body = (await response.json()) as any;
     expect(body.count).toBe(endpointCount);
     expect(body.data.some((item: any) => item.path === "/v1/apple/search/songs")).toBe(true);
+    expect(body.data.some((item: any) => item.path === "/swagger")).toBe(true);
     expect(body.data.some((item: any) => item.path === "/v1/jiosaavn/search/songs")).toBe(true);
     expect(body.data.some((item: any) => item.path === "/v1/gaana/search/songs")).toBe(true);
     expect(body.data.some((item: any) => item.path === "/v1/deezer/search/tracks")).toBe(true);

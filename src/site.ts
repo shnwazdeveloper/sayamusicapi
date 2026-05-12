@@ -337,191 +337,109 @@ export function landingPage(origin: string) {
 }
 
 export function docsPage(origin: string) {
-  const aggregateExample = `${origin}/v1/search/tracks?q=believer`;
-  const appleExample = `${origin}/v1/apple/search/songs?q=believer`;
-  const jioSaavnExample = `${origin}/v1/jiosaavn/search/songs?q=believer`;
-  const gaanaExample = `${origin}/v1/gaana/search/songs?q=believer`;
-  const deezerExample = `${origin}/v1/deezer/search/tracks?q=believer`;
-  const openverseExample = `${origin}/v1/openverse/search/audio?q=piano`;
-  const previewExample = `${origin}/v1/media/preview?q=believer`;
-  const streamExample = `${origin}/v1/media/stream?source=audius&id=TRACK_ID`;
-  const diagnosticsExample = `${origin}/v1/diagnostics/routes`;
+  const scalarConfig = JSON.stringify(
+    {
+      _integration: "hono",
+      isEditable: false,
+      layout: "modern",
+      darkMode: true,
+      metaData: {
+        applicationName: "SayaMusicAPI",
+        author: "shnwazdeveloper",
+        creator: "shnwazdeveloper",
+        publisher: "shnwazdeveloper",
+        robots: "index, follow",
+        description:
+          "SayaMusicAPI is a Cloudflare Workers music API for legal search, metadata, artwork, preview URLs, open streams, public radio, JioSaavn discovery, Gaana links, and web source helpers."
+      },
+      url: "/swagger",
+      theme: "deepSpace",
+      defaultHttpClient: {
+        targetKey: "shell",
+        clientKey: "curl"
+      },
+      servers: [
+        {
+          url: origin
+        }
+      ]
+    },
+    null,
+    8
+  );
 
   return `<!doctype html>
   <html lang="en">
     <head>
-      ${baseHead(
-        "SayaMusicAPI Docs",
-        "Documentation for SayaMusicAPI endpoints, provider routes, legal media policy, and Cloudflare deployment."
-      )}
+      <title>SayaMusicAPI Documentation</title>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <meta
+        name="description"
+        content="Scalar documentation for SayaMusicAPI endpoints, provider routes, legal media policy, and Cloudflare deployment.">
+      <style>
+        :root {
+          color-scheme: dark;
+          background: #080b12;
+        }
+
+        body {
+          margin: 0;
+          background: #080b12;
+        }
+
+        #app {
+          min-height: 100vh;
+        }
+
+        .scalar-loading {
+          display: grid;
+          min-height: 100vh;
+          place-items: center;
+          padding: 24px;
+          color: #e7ebf4;
+          font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+
+        .scalar-loading div {
+          display: grid;
+          gap: 12px;
+          max-width: 560px;
+        }
+
+        .scalar-loading span {
+          color: #8f99ad;
+          font-size: 13px;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+        }
+
+        .scalar-loading strong {
+          font-size: clamp(32px, 5vw, 56px);
+          line-height: 1;
+        }
+
+        .scalar-loading p {
+          margin: 0;
+          color: #aeb7c8;
+          line-height: 1.6;
+        }
+      </style>
     </head>
-    <body class="docs-page">
-      ${nav()}
-      <main class="docs-shell">
-        <aside class="docs-aside" aria-label="Documentation sections">
-          ${docsTabs()}
-        </aside>
-
-        <article class="docs-content">
-          <header class="docs-hero" id="start">
-            <p class="eyebrow">Documentation</p>
-            <h1>Saya Music API docs</h1>
-            <p>
-              Use the hosted Cloudflare Worker or deploy your own copy. JSON endpoints live under <code>/v1</code>; this docs page collects every main tab for quickstart, search, media, providers, examples, endpoint registry, and Cloudflare deployment. The registry publishes <strong>${endpointCount}</strong> routes across <strong>${providerCount()}</strong> provider groups.
-            </p>
-          </header>
-
-          <nav class="docs-tab-board" aria-label="Documentation tabs">
-            ${docsTabCards()}
-          </nav>
-
-          <section class="doc-section" id="quickstart">
-            <div class="section-heading">
-              <h2>Quickstart</h2>
-              <a class="button compact" href="/v1">API root</a>
-            </div>
-            <p>
-              Start with one search route, then move into provider-specific tabs when you need exact source behavior. Every route returns JSON and public CORS headers.
-            </p>
-            <div class="code-grid">
-              <pre><code>curl "${escapeHtml(aggregateExample)}"</code></pre>
-              <pre><code>curl "${escapeHtml(origin)}/health"</code></pre>
-              <pre><code>curl "${escapeHtml(origin)}/v1/endpoints"</code></pre>
-            </div>
-          </section>
-
-          <section class="doc-section" id="search-tabs">
-            <div class="section-heading">
-              <h2>Search Tabs</h2>
-              <a class="button compact" href="/v1/search/tracks?q=believer">Try aggregate</a>
-            </div>
-            <p>
-              These tabs cover the most useful search surfaces: aggregate search, direct provider lookup, open audio, and public radio streams.
-            </p>
-            <div class="route-grid">
-              ${routeCards(origin)}
-            </div>
-          </section>
-
-          <section class="doc-section" id="media-tabs">
-            <div class="section-heading">
-              <h2>Media Helper Tabs</h2>
-              <a class="button compact" href="/v1/quality">Quality policy</a>
-            </div>
-            <div class="media-tabs">
-              <article>
-                <span>Preview</span>
-                <code>/v1/media/preview</code>
-                <p>Find legal short preview clips from supported providers.</p>
-              </article>
-              <article>
-                <span>Stream</span>
-                <code>/v1/media/stream</code>
-                <p>Resolve open streams where the provider grants public access.</p>
-              </article>
-              <article>
-                <span>Download</span>
-                <code>/v1/media/download</code>
-                <p>Return public/free file links, especially Internet Archive item files.</p>
-              </article>
-              <article>
-                <span>Artwork</span>
-                <code>/v1/media/artwork</code>
-                <p>Resolve artwork from Apple/iTunes and Cover Art Archive sources.</p>
-              </article>
-            </div>
-          </section>
-
-          <section class="doc-section" id="policy">
-            <h2>Free Access Policy</h2>
-            <p>
-              SayaMusicAPI does not add API keys, paid tiers, user quotas, request throttling, or API-side result caps. Provider paging inputs are passed through only when clients send them, so the API remains free to call.
-            </p>
-            <div class="notice">
-              Upstream providers can still enforce their own public paging, licensing, availability, and fair-use rules.
-            </div>
-          </section>
-
-          <section class="doc-section" id="providers">
-            <div class="section-heading">
-              <h2>Provider Groups</h2>
-              <a class="button compact" href="/v1/sources">Source JSON</a>
-            </div>
-            <div class="provider-tabs" aria-label="Provider endpoint tabs">
-              ${providerTabs()}
-            </div>
-            <div class="provider-grid">
-              ${endpointGroups()}
-            </div>
-          </section>
-
-          <section class="doc-section" id="diagnostics">
-            <h2>Alive and Diagnostics</h2>
-            <p>
-              The API exposes simple alive routes plus route/source diagnostics. These are fast checks for uptime monitors and for confirming that the deployed endpoint registry is healthy.
-            </p>
-            <div class="diagnostic-links">
-              <a href="/alive">/alive</a>
-              <a href="/v1/status">/v1/status</a>
-              <a href="/v1/diagnostics">/v1/diagnostics</a>
-              <a href="/v1/diagnostics/routes">/v1/diagnostics/routes</a>
-            </div>
-          </section>
-
-          <section class="doc-section" id="examples">
-            <h2>Examples</h2>
-            <div class="code-grid">
-              <pre><code>curl "${escapeHtml(aggregateExample)}"</code></pre>
-              <pre><code>curl "${escapeHtml(appleExample)}"</code></pre>
-              <pre><code>curl "${escapeHtml(jioSaavnExample)}"</code></pre>
-              <pre><code>curl "${escapeHtml(gaanaExample)}"</code></pre>
-              <pre><code>curl "${escapeHtml(deezerExample)}"</code></pre>
-              <pre><code>curl "${escapeHtml(openverseExample)}"</code></pre>
-              <pre><code>curl "${escapeHtml(previewExample)}"</code></pre>
-              <pre><code>curl "${escapeHtml(streamExample)}"</code></pre>
-              <pre><code>curl "${escapeHtml(diagnosticsExample)}"</code></pre>
-            </div>
-          </section>
-
-          <section class="doc-section" id="endpoints">
-            <div class="section-heading">
-              <h2>Endpoint Registry</h2>
-              <a class="button compact" href="/v1/openapi.json">OpenAPI JSON</a>
-            </div>
-            <div class="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Method</th>
-                    <th>Path</th>
-                    <th>Provider</th>
-                    <th>Summary</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${endpointRows(endpoints)}
-                </tbody>
-              </table>
-            </div>
-          </section>
-
-          <section class="doc-section" id="deploy">
-            <div class="section-heading">
-              <h2>Cloudflare Deploy</h2>
-              <a class="button compact" href="https://github.com/shnwazdeveloper/sayamusicapi">GitHub repo</a>
-            </div>
-            <p>
-              The repository is already configured for Cloudflare Workers with <code>wrangler.jsonc</code>. Push the repo to GitHub, then deploy with Wrangler from the project folder.
-            </p>
-            <div class="deploy-steps">
-              <pre><code>npm install
-npm run typecheck
-npm test
-npm run deploy</code></pre>
-            </div>
-          </section>
-        </article>
-      </main>
+    <body>
+      <div id="app">
+        <div class="scalar-loading">
+          <div>
+            <span>SayaMusicAPI</span>
+            <strong>Loading API documentation</strong>
+            <p>${endpointCount} documented routes from the Cloudflare Worker, including JioSaavn, Gaana, Audius, Deezer, Openverse, Radio Browser, and web source helpers.</p>
+          </div>
+        </div>
+      </div>
+      <script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"></script>
+      <script>
+        Scalar.createApiReference("#app", ${scalarConfig});
+      </script>
     </body>
   </html>`;
 }
