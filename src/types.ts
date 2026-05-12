@@ -19,6 +19,8 @@ export type ProviderName =
   | "cover-art"
   | "archive"
   | "audius"
+  | "jiosaavn"
+  | "gaana"
   | "deezer"
   | "radio-browser"
   | "openverse"

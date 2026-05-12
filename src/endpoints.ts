@@ -212,6 +212,40 @@ function endpoint(
   };
 }
 
+const jioSaavnResources = ["all", "tracks", "songs", "albums", "artists", "playlists"];
+const jioSaavnModes = ["quick", "deep", "metadata", "artwork", "preview"];
+const jiosaavn = [
+  endpoint("jiosaavn", "/v1/jiosaavn/search", "JioSaavn mixed autocomplete search", ["q", "country", "page"]),
+  ...jioSaavnResources.flatMap((resource) => [
+    endpoint("jiosaavn", `/v1/jiosaavn/search/${resource}`, `JioSaavn ${resource} search`, [
+      "q",
+      "country",
+      "page"
+    ]),
+    ...jioSaavnModes.map((mode) =>
+      endpoint("jiosaavn", `/v1/jiosaavn/search/${resource}/${mode}`, `JioSaavn ${resource} search ${mode}`, [
+        "q",
+        "country",
+        "page"
+      ])
+    )
+  ])
+];
+
+const gaanaResources = ["all", "tracks", "songs", "albums", "artists", "playlists"];
+const gaanaModes = ["quick", "deep", "metadata", "artwork", "preview"];
+const gaana = [
+  endpoint("gaana", "/v1/gaana/search", "Gaana official search-link helper", ["q"]),
+  ...gaanaResources.flatMap((resource) => [
+    endpoint("gaana", `/v1/gaana/search/${resource}`, `Gaana ${resource} official search-link helper`, ["q"]),
+    ...gaanaModes.map((mode) =>
+      endpoint("gaana", `/v1/gaana/search/${resource}/${mode}`, `Gaana ${resource} official search-link ${mode}`, [
+        "q"
+      ])
+    )
+  ])
+];
+
 const deezerResources = [
   "all",
   "tracks",
@@ -428,7 +462,22 @@ const odesli = [
   endpoint("odesli", "/v1/odesli/podcast", "Odesli podcast-link resolver", ["url", "userCountry"])
 ];
 
-const webSources = ["deezer", "openverse", "wikidata", "wikimedia", "wikipedia", "commons", "github", "radio-browser"];
+const webSources = [
+  "jiosaavn",
+  "gaana",
+  "spotify",
+  "soundcloud",
+  "bandcamp",
+  "youtube-music",
+  "deezer",
+  "openverse",
+  "wikidata",
+  "wikimedia",
+  "wikipedia",
+  "commons",
+  "github",
+  "radio-browser"
+];
 const webResources = ["tracks", "albums", "artists", "playlists", "audio", "images", "repositories", "stations"];
 const webModes = ["quick", "deep", "metadata", "artwork", "preview"];
 const web = webSources.flatMap((source) =>
@@ -449,6 +498,8 @@ export const endpoints: EndpointDoc[] = [
   ...coverArt,
   ...archive,
   ...audius,
+  ...jiosaavn,
+  ...gaana,
   ...deezer,
   ...radioBrowser,
   ...openverse,

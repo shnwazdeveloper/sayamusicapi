@@ -191,8 +191,9 @@ export async function fetchJson<T>(
     } as T;
   }
 
+  const text = await response.text();
   try {
-    return (await response.json()) as T;
+    return JSON.parse(text) as T;
   } catch {
     return {
       upstreamOk: true,
@@ -200,7 +201,7 @@ export async function fetchJson<T>(
       url: url.toString(),
       message: "Upstream provider returned a non-JSON success response.",
       contentType: response.headers.get("Content-Type"),
-      text: await response.text()
+      text
     } as T;
   }
 }

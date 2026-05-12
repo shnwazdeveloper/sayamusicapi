@@ -32,6 +32,8 @@ const sourceNames = [
   "Cover Art Archive",
   "Internet Archive",
   "Audius",
+  "JioSaavn",
+  "Gaana",
   "Deezer",
   "Radio Browser",
   "Openverse",
@@ -39,7 +41,11 @@ const sourceNames = [
   "Wikimedia",
   "ListenBrainz",
   "GitHub",
-  "Odesli"
+  "Odesli",
+  "Spotify",
+  "SoundCloud",
+  "Bandcamp",
+  "YouTube Music"
 ];
 
 const docTabs = [
@@ -145,6 +151,16 @@ function routeCards(origin: string) {
       title: "Provider search",
       route: "/v1/deezer/search/tracks?q=believer",
       copy: "Call direct provider routes when you need a specific catalog response."
+    },
+    {
+      title: "JioSaavn search",
+      route: "/v1/jiosaavn/search/songs?q=believer",
+      copy: "Search JioSaavn metadata, artwork, official links, and legal preview URLs."
+    },
+    {
+      title: "Gaana search link",
+      route: "/v1/gaana/search/songs?q=believer",
+      copy: "Return an official Gaana search URL without scraping protected playback."
     },
     {
       title: "Open audio",
@@ -323,6 +339,8 @@ export function landingPage(origin: string) {
 export function docsPage(origin: string) {
   const aggregateExample = `${origin}/v1/search/tracks?q=believer`;
   const appleExample = `${origin}/v1/apple/search/songs?q=believer`;
+  const jioSaavnExample = `${origin}/v1/jiosaavn/search/songs?q=believer`;
+  const gaanaExample = `${origin}/v1/gaana/search/songs?q=believer`;
   const deezerExample = `${origin}/v1/deezer/search/tracks?q=believer`;
   const openverseExample = `${origin}/v1/openverse/search/audio?q=piano`;
   const previewExample = `${origin}/v1/media/preview?q=believer`;
@@ -455,6 +473,8 @@ export function docsPage(origin: string) {
             <div class="code-grid">
               <pre><code>curl "${escapeHtml(aggregateExample)}"</code></pre>
               <pre><code>curl "${escapeHtml(appleExample)}"</code></pre>
+              <pre><code>curl "${escapeHtml(jioSaavnExample)}"</code></pre>
+              <pre><code>curl "${escapeHtml(gaanaExample)}"</code></pre>
               <pre><code>curl "${escapeHtml(deezerExample)}"</code></pre>
               <pre><code>curl "${escapeHtml(openverseExample)}"</code></pre>
               <pre><code>curl "${escapeHtml(previewExample)}"</code></pre>

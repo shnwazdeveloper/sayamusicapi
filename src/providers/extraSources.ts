@@ -1,7 +1,18 @@
 import type { ApiContext } from "../http";
-import { ApiError, applyLimit, encodedPath, fetchJson, requestedLimit, requiredParam, requiredQuery } from "../http";
+import {
+  ApiError,
+  applyLimit,
+  compactObject,
+  defaultCountry,
+  encodedPath,
+  fetchJson,
+  requestedLimit,
+  requiredParam,
+  requiredQuery
+} from "../http";
 
 const DEEZER_BASE = "https://api.deezer.com/";
+const JIOSAAVN_BASE = "https://www.jiosaavn.com/api.php";
 const RADIO_BASE = "https://de1.api.radio-browser.info/json/";
 const OPENVERSE_BASE = "https://api.openverse.org/v1/";
 const WIKIDATA_BASE = "https://www.wikidata.org/w/api.php";
@@ -19,6 +30,175 @@ function queryOrRequired(c: ApiContext) {
 
 function pathResource(value: string) {
   return value.replace(/-/g, "_");
+}
+
+function optionalText(...values: unknown[]) {
+  for (const value of values) {
+    if (typeof value === "string" && value.trim()) {
+      return value.trim();
+    }
+    if (typeof value === "number" && Number.isFinite(value)) {
+      return `${value}`;
+    }
+  }
+  return undefined;
+}
+
+function optionalNumber(value: unknown) {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+  if (typeof value === "string" && value.trim()) {
+    const parsed = Number.parseInt(value, 10);
+    if (Number.isFinite(parsed)) {
+      return parsed;
+    }
+  }
+  return undefined;
+}
+
+function recordValue(value: unknown) {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
+}
+
+function normalizedJioSaavnResource(resource: string) {
+  const normalized = resource.toLowerCase().replace(/_/g, "-");
+  if (normalized === "tracks" || normalized === "track") return "songs";
+  if (normalized === "song") return "songs";
+  if (normalized === "album") return "albums";
+  if (normalized === "artist") return "artists";
+  if (normalized === "playlist") return "playlists";
+  if (normalized === "show") return "shows";
+  if (normalized === "episode") return "episodes";
+  return normalized || "all";
+}
+
+function jioSaavnCall(resource: string) {
+  const normalized = normalizedJioSaavnResource(resource);
+  const calls: Record<string, string> = {
+    all: "autocomplete.get",
+    songs: "search.getResults",
+    albums: "search.getAlbumResults",
+    artists: "search.getArtistResults",
+    playlists: "search.getPlaylistResults"
+  };
+  return calls[normalized] || calls.all;
+}
+
+function jioSaavnSearchUrl(query: string) {
+  return `https://www.jiosaavn.com/search/${encodeURIComponent(query)}`;
+}
+
+function sanitizeJioSaavnItem(value: unknown, fallbackType: string) {
+  const item = recordValue(value);
+  const moreInfo = recordValue(item.more_info);
+  const type = optionalText(item.type, fallbackType)?.replace(/^track$/, "song");
+  const title = optionalText(item.song, item.title, item.name, item.text, item.query);
+  const artist = optionalText(
+    item.primary_artists,
+    moreInfo.primary_artists,
+    item.music,
+    item.singers,
+    moreInfo.singers,
+    item.description
+  );
+  const previewUrl = optionalText(item.media_preview_url, moreInfo.media_preview_url, item.vlink, moreInfo.vlink);
+
+  return compactObject({
+    source: "jiosaavn",
+    id: optionalText(item.id, item.albumid),
+    type,
+    title,
+    album: optionalText(item.album),
+    artist,
+    singers: optionalText(item.singers, moreInfo.singers),
+    year: optionalText(item.year, moreInfo.year),
+    language: optionalText(item.language, moreInfo.language),
+    durationSeconds: optionalNumber(item.duration),
+    playCount: optionalNumber(item.play_count),
+    image: optionalText(item.image),
+    officialUrl: optionalText(item.perma_url, item.url),
+    albumUrl: optionalText(item.album_url),
+    previewUrl,
+    copyright: optionalText(item.copyright_text),
+    explicit: item.explicit_content === 1 || item.explicit_content === "1",
+    hasLyrics: item.has_lyrics === true || item.has_lyrics === "true",
+    description: optionalText(item.description, item.subtitle),
+    note: previewUrl
+      ? "Official preview URL only. Protected/encrypted media fields are intentionally not exposed."
+      : "Metadata and official link only. Protected/encrypted media fields are intentionally not exposed."
+  });
+}
+
+function normalizeJioSaavnPayload(payload: unknown, resource: string) {
+  const data = recordValue(payload);
+  const normalizedResource = normalizedJioSaavnResource(resource);
+  const fallbackType = normalizedResource === "all" ? "item" : normalizedResource.replace(/s$/, "");
+
+  if (Array.isArray(data.results)) {
+    const results = data.results.map((item) => sanitizeJioSaavnItem(item, fallbackType));
+    return compactObject({
+      total: optionalNumber(data.total),
+      start: optionalNumber(data.start),
+      count: results.length,
+      results
+    });
+  }
+
+  const sections: Record<string, unknown[]> = {};
+  const results: unknown[] = [];
+  for (const [key, section] of Object.entries(data)) {
+    const sectionData = recordValue(section);
+    if (!Array.isArray(sectionData.data)) {
+      continue;
+    }
+    const sectionItems = sectionData.data.map((item) => sanitizeJioSaavnItem(item, key.replace(/s$/, "")));
+    sections[key] = sectionItems;
+    results.push(...sectionItems);
+  }
+
+  return {
+    count: results.length,
+    sections,
+    results
+  };
+}
+
+function legalWebSearchUrl(source: string, query: string) {
+  const encoded = encodeURIComponent(query);
+  const sourceMap: Record<string, string> = {
+    gaana: `https://gaana.com/search/${encoded}`,
+    spotify: `https://open.spotify.com/search/${encoded}`,
+    soundcloud: `https://soundcloud.com/search?q=${encoded}`,
+    bandcamp: `https://bandcamp.com/search?q=${encoded}`,
+    "youtube-music": `https://music.youtube.com/search?q=${encoded}`,
+    youtube: `https://music.youtube.com/search?q=${encoded}`
+  };
+  return sourceMap[source] || `https://www.google.com/search?q=${encoded}%20music`;
+}
+
+function legalWebLinkSearch(c: ApiContext, source: string, resource: string) {
+  const query = queryOrRequired(c);
+  const url = legalWebSearchUrl(source, query);
+  return {
+    endpointAlive: true,
+    source,
+    resource: resource || "tracks",
+    query,
+    officialSearchUrl: url,
+    note:
+      "This source is exposed as an official search-link helper. It does not scrape protected catalogs or bypass provider playback rules.",
+    results: [
+      {
+        source,
+        type: resource || "tracks",
+        title: `Search ${source} for "${query}"`,
+        officialUrl: url
+      }
+    ]
+  };
 }
 
 export async function deezerSearch(c: ApiContext, resource: string) {
@@ -43,6 +223,69 @@ export async function deezerSearch(c: ApiContext, resource: string) {
     url.searchParams.set("order", order);
   }
   return fetchJson(c, url);
+}
+
+export async function jioSaavnSearch(c: ApiContext, resource = "all") {
+  const query = queryOrRequired(c);
+  const normalized = normalizedJioSaavnResource(resource);
+  const call = jioSaavnCall(normalized);
+  const url = new URL(JIOSAAVN_BASE);
+  url.searchParams.set("__call", call);
+  url.searchParams.set("_format", "json");
+  url.searchParams.set("_marker", "0");
+  url.searchParams.set("ctx", "web6dot0");
+
+  if (call === "autocomplete.get") {
+    url.searchParams.set("query", query);
+  } else {
+    url.searchParams.set("q", query);
+    url.searchParams.set("cc", defaultCountry(c).toLowerCase());
+    const pageValue = c.req.query("page") || c.req.query("p");
+    if (pageValue) {
+      url.searchParams.set("p", pageValue);
+    }
+    const limitValue = requestedLimit(c);
+    if (limitValue) {
+      url.searchParams.set("n", limitValue);
+    }
+  }
+
+  const upstream = await fetchJson<Record<string, unknown>>(c, url, {
+    headers: {
+      Accept: "application/json, text/plain, */*",
+      "User-Agent":
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 SayaMusicAPI/0.1.0"
+    },
+    cf: { cacheTtl: 900, cacheEverything: true }
+  });
+
+  if (recordValue(upstream).upstreamOk === false || recordValue(upstream).message) {
+    return {
+      endpointAlive: true,
+      source: "jiosaavn",
+      resource: normalized,
+      query,
+      officialSearchUrl: jioSaavnSearchUrl(query),
+      note:
+        "JioSaavn route is alive. Upstream availability can vary, so the official search URL is included as a fallback.",
+      upstream
+    };
+  }
+
+  return {
+    endpointAlive: true,
+    source: "jiosaavn",
+    resource: normalized,
+    query,
+    officialSearchUrl: jioSaavnSearchUrl(query),
+    policy:
+      "Search metadata and official preview URLs only. SayaMusicAPI does not expose protected/encrypted full-song media URLs.",
+    ...normalizeJioSaavnPayload(upstream, normalized)
+  };
+}
+
+export function gaanaSearch(c: ApiContext, resource = "tracks") {
+  return legalWebLinkSearch(c, "gaana", resource);
 }
 
 export async function deezerLookup(c: ApiContext, resource: string) {
@@ -338,23 +581,36 @@ export async function odesliLinks(c: ApiContext) {
 }
 
 export async function webSourceSearch(c: ApiContext, source: string, resource: string) {
-  if (source === "deezer") {
+  const normalizedSource = source.toLowerCase().replace(/_/g, "-");
+  if (["jiosaavn", "jio-saavn", "jiosavan", "jio-savan"].includes(normalizedSource)) {
+    return jioSaavnSearch(c, resource || "all");
+  }
+  if (normalizedSource === "gaana") {
+    return gaanaSearch(c, resource || "tracks");
+  }
+  if (["spotify", "soundcloud", "bandcamp", "youtube-music", "youtube"].includes(normalizedSource)) {
+    return legalWebLinkSearch(c, normalizedSource, resource || "tracks");
+  }
+  if (normalizedSource === "deezer") {
     return deezerSearch(c, resource);
   }
-  if (source === "openverse") {
+  if (normalizedSource === "openverse") {
     return openverseSearch(c, resource === "images" ? "images" : "audio");
   }
-  if (source === "wikidata") {
+  if (normalizedSource === "wikidata") {
     return wikidataSearch(c, resource === "properties" ? "properties" : "items");
   }
-  if (source === "wikimedia" || source === "wikipedia" || source === "commons") {
-    return wikimediaSearch(c, source === "commons" ? "commons" : "wikipedia");
+  if (normalizedSource === "wikimedia" || normalizedSource === "wikipedia" || normalizedSource === "commons") {
+    return wikimediaSearch(c, normalizedSource === "commons" ? "commons" : "wikipedia");
   }
-  if (source === "github") {
+  if (normalizedSource === "github") {
     return githubSearch(c, resource || "repositories");
   }
-  if (source === "radio" || source === "radio-browser") {
+  if (normalizedSource === "radio" || normalizedSource === "radio-browser") {
     return radioBrowserStations(c, "search");
   }
-  throw new ApiError(400, "Supported web sources: deezer, openverse, wikidata, wikimedia, github, radio-browser.");
+  throw new ApiError(
+    400,
+    "Supported web sources: jiosaavn, gaana, spotify, soundcloud, bandcamp, youtube-music, deezer, openverse, wikidata, wikimedia, github, radio-browser."
+  );
 }

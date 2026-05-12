@@ -108,6 +108,8 @@ describe("SayaMusicAPI", () => {
     const body = (await response.json()) as any;
     expect(body.count).toBe(endpointCount);
     expect(body.data.some((item: any) => item.path === "/v1/apple/search/songs")).toBe(true);
+    expect(body.data.some((item: any) => item.path === "/v1/jiosaavn/search/songs")).toBe(true);
+    expect(body.data.some((item: any) => item.path === "/v1/gaana/search/songs")).toBe(true);
     expect(body.data.some((item: any) => item.path === "/v1/deezer/search/tracks")).toBe(true);
     expect(body.data.some((item: any) => item.path === "/v1/openverse/search/audio")).toBe(true);
   });
@@ -168,12 +170,18 @@ describe("SayaMusicAPI", () => {
 
   it("routes new providers instead of falling through to 404", async () => {
     const smokePaths = [
+      "/v1/jiosaavn/search/songs",
+      "/v1/jiosavan/search/songs",
+      "/v1/gaana/search/songs",
       "/v1/deezer/search/tracks",
       "/v1/openverse/search/audio",
       "/v1/wikidata/search/items",
       "/v1/listenbrainz/metadata/lookup",
       "/v1/odesli/links",
-      "/v1/web/deezer/search/tracks"
+      "/v1/web/deezer/search/tracks",
+      "/v1/web/jiosaavn/search/tracks",
+      "/v1/web/gaana/search/tracks",
+      "/v1/web/spotify/search/tracks"
     ];
 
     for (const path of smokePaths) {

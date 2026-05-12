@@ -57,8 +57,10 @@ import {
   deezerChart,
   deezerLookup,
   deezerSearch,
+  gaanaSearch,
   githubRepo,
   githubSearch,
+  jioSaavnSearch,
   listenBrainzLookup,
   listenBrainzPopularity,
   listenBrainzStats,
@@ -167,6 +169,18 @@ const providers = [
     auth: "none for public read routes"
   },
   {
+    id: "jiosaavn",
+    name: "JioSaavn web search",
+    features: ["songs", "albums", "artists", "playlists", "official preview URLs"],
+    auth: "none for public web search routes"
+  },
+  {
+    id: "gaana",
+    name: "Gaana official search links",
+    features: ["official search URLs", "songs", "albums", "artists", "playlists"],
+    auth: "none"
+  },
+  {
     id: "deezer",
     name: "Deezer public API",
     features: ["search", "metadata", "charts", "30-second previews", "artwork"],
@@ -245,6 +259,8 @@ function welcome(origin: string) {
     },
     examples: [
       `${origin}/v1/search/tracks?q=alan%20walker`,
+      `${origin}/v1/jiosaavn/search/songs?q=believer`,
+      `${origin}/v1/gaana/search/songs?q=believer`,
       `${origin}/v1/apple/search/songs?q=believer`,
       `${origin}/v1/musicbrainz/search/recordings?q=dua%20lipa`,
       `${origin}/v1/archive/search/music?q=jazz`
@@ -315,6 +331,8 @@ app.get("/v1/diagnostics/live", (c) =>
     message: "Use these URLs for low-cost live smoke tests.",
     checks: [
       "/health",
+      "/v1/jiosaavn/search/songs?q=believer",
+      "/v1/gaana/search/songs?q=believer",
       "/v1/deezer/search/tracks?q=believer",
       "/v1/radio-browser/stations/search?q=lofi",
       "/v1/openverse/search/audio?q=piano",
@@ -339,6 +357,11 @@ app.get("/v1/quality", (c) =>
         source: "audius",
         type: "stream",
         note: "Open music streams where the Audius API grants access."
+      },
+      {
+        source: "jiosaavn",
+        type: "preview",
+        note: "Search metadata and official preview URLs only; protected media URLs are not exposed."
       },
       {
         source: "archive",
@@ -368,6 +391,10 @@ app.get("/v1/sources", (c) =>
       "Internet Archive advanced search and metadata APIs for public/free media files.",
     audius:
       "Audius REST API for open music catalog search and stream resolution.",
+    jiosaavn:
+      "JioSaavn public web search for metadata, official catalog links, artwork, and preview URLs. Protected/encrypted full-song media fields are not exposed.",
+    gaana:
+      "Gaana official website search-link helper for legal discovery without scraping protected playback.",
     deezer:
       "Deezer public API for metadata, charts, artwork, and preview clips.",
     radioBrowser:
@@ -381,8 +408,34 @@ app.get("/v1/sources", (c) =>
     github:
       "GitHub public REST API for discovering public music API repositories and source references.",
     odesli:
-      "Odesli/Songlink for resolving cross-platform music smart links."
+      "Odesli/Songlink for resolving cross-platform music smart links.",
+    spotify:
+      "Spotify official search-link helper through the unified web routes.",
+    soundcloud:
+      "SoundCloud official search-link helper through the unified web routes.",
+    bandcamp:
+      "Bandcamp official search-link helper through the unified web routes.",
+    youtubeMusic:
+      "YouTube Music official search-link helper through the unified web routes."
   })
+);
+
+for (const prefix of ["/v1/jiosaavn", "/v1/jio-saavn", "/v1/jiosavan", "/v1/jio-savan"]) {
+  app.get(`${prefix}/search`, (c) => jsonOk(c, jioSaavnSearch(c, "all")));
+  app.get(`${prefix}/search/:resource`, (c) =>
+    jsonOk(c, jioSaavnSearch(c, requiredParam(c, "resource")))
+  );
+  app.get(`${prefix}/search/:resource/:mode`, (c) =>
+    jsonOk(c, jioSaavnSearch(c, requiredParam(c, "resource")))
+  );
+}
+
+app.get("/v1/gaana/search", (c) => jsonOk(c, gaanaSearch(c, "all")));
+app.get("/v1/gaana/search/:resource", (c) =>
+  jsonOk(c, gaanaSearch(c, requiredParam(c, "resource")))
+);
+app.get("/v1/gaana/search/:resource/:mode", (c) =>
+  jsonOk(c, gaanaSearch(c, requiredParam(c, "resource")))
 );
 
 app.get("/v1/deezer/search/:resource", (c) =>

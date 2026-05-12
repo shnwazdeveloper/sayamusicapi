@@ -6,7 +6,7 @@ This project intentionally does not scrape unauthorized song files or bypass cop
 
 ## Features
 
-- 900+ GET endpoints across Apple/iTunes, MusicBrainz, Cover Art Archive, Internet Archive, Audius, Deezer, Radio Browser, Openverse, Wikidata, Wikimedia, ListenBrainz, GitHub, and Odesli.
+- 1300+ GET endpoints across Apple/iTunes, MusicBrainz, Cover Art Archive, Internet Archive, Audius, JioSaavn, Gaana, Deezer, Radio Browser, Openverse, Wikidata, Wikimedia, ListenBrainz, GitHub, Odesli, and web search-link sources.
 - Landing page at `/` and documentation page at `/docs`.
 - Docs-first website with tabs for quickstart, search, media helpers, providers, examples, endpoint registry, and Cloudflare deploy.
 - No API-side quotas, API keys, paid tiers, request throttling, or result caps added by SayaMusicAPI.
@@ -32,6 +32,8 @@ Example calls:
 
 ```bash
 curl "http://localhost:8787/v1/search/tracks?q=alan%20walker"
+curl "http://localhost:8787/v1/jiosaavn/search/songs?q=believer"
+curl "http://localhost:8787/v1/gaana/search/songs?q=believer"
 curl "http://localhost:8787/v1/apple/search/songs?q=believer"
 curl "http://localhost:8787/v1/deezer/search/tracks?q=believer"
 curl "http://localhost:8787/v1/openverse/search/audio?q=piano"
@@ -70,6 +72,8 @@ GET /v1/media/artwork?provider=cover-art&release=...
 - Cover Art Archive: release and release-group cover art.
 - Internet Archive: public/free item metadata and file links. Check item license metadata before reuse.
 - Audius: open music catalog and stream resolution.
+- JioSaavn: public web search metadata, artwork, official catalog links, and legal preview URLs. Protected/encrypted full-song media fields are not exposed.
+- Gaana: official search-link helper for legal discovery without protected playback scraping.
 - Deezer: public metadata, chart, artwork, and preview clip routes.
 - Radio Browser: public radio station metadata and stream URLs.
 - Openverse: openly licensed audio and image discovery.
@@ -77,6 +81,7 @@ GET /v1/media/artwork?provider=cover-art&release=...
 - ListenBrainz: public music stats and metadata lookup.
 - GitHub: public repository discovery for music/API/source references.
 - Odesli: cross-platform smart links for song, album, and podcast URLs.
+- Spotify, SoundCloud, Bandcamp, and YouTube Music: official search-link helpers through `/v1/web/:source/search/:resource`.
 
 ## Tests
 

@@ -9,6 +9,7 @@ import {
 import { archivePlayable, archiveSearch } from "./archive";
 import { audiusSearch, audiusTrackStream, normalizeAudiusTracks } from "./audius";
 import { coverArtJson } from "./coverArt";
+import { jioSaavnSearch } from "./extraSources";
 import { mbSearch, normalizeMbRecordings } from "./musicbrainz";
 
 type AggregateType =
@@ -34,10 +35,30 @@ const mbType: Partial<Record<AggregateType, string>> = {
   artists: "artists"
 };
 
+function normalizeJioSaavnResults(data: unknown) {
+  const value = data as { results?: unknown[] } | undefined;
+  if (!Array.isArray(value?.results)) {
+    return [];
+  }
+  return value.results.map((item) => {
+    const result = item as Record<string, unknown>;
+    return {
+      source: "jiosaavn",
+      id: result.id,
+      title: result.title,
+      artist: result.artist,
+      album: result.album,
+      artworkUrl: result.image,
+      previewUrl: result.previewUrl,
+      url: result.officialUrl
+    };
+  });
+}
+
 export async function aggregateSearch(c: ApiContext, type: AggregateType = "tracks") {
   requiredQuery(c);
   const providers = new Set(
-    (c.req.query("providers") || "apple,musicbrainz,audius,archive")
+    (c.req.query("providers") || "apple,musicbrainz,audius,jiosaavn,archive")
       .split(",")
       .map((item) => item.trim())
       .filter(Boolean)
@@ -53,6 +74,10 @@ export async function aggregateSearch(c: ApiContext, type: AggregateType = "trac
   if (providers.has("audius") && type === "tracks") {
     tasks.push(["audius", audiusSearch(c, "tracks")]);
   }
+  if (providers.has("jiosaavn") && ["tracks", "albums", "artists"].includes(type)) {
+    const resource = type === "tracks" ? "songs" : type;
+    tasks.push(["jiosaavn", jioSaavnSearch(c, resource)]);
+  }
   if (providers.has("archive") && type === "tracks" && yes(c, "includeArchive")) {
     tasks.push(["archive", archiveSearch(c, "audio")]);
   }
@@ -61,7 +86,8 @@ export async function aggregateSearch(c: ApiContext, type: AggregateType = "trac
   const merged = [
     ...normalizeAppleResults(sources.apple),
     ...normalizeMbRecordings(sources.musicbrainz),
-    ...normalizeAudiusTracks(sources.audius)
+    ...normalizeAudiusTracks(sources.audius),
+    ...normalizeJioSaavnResults(sources.jiosaavn)
   ];
 
   return {
