@@ -342,7 +342,7 @@ export function docsPage(origin: string) {
       _integration: "hono",
       isEditable: false,
       layout: "modern",
-      darkMode: true,
+      darkMode: false,
       metaData: {
         applicationName: "SayaMusicAPI",
         author: "shnwazdeveloper",
@@ -353,7 +353,7 @@ export function docsPage(origin: string) {
           "SayaMusicAPI is a Cloudflare Workers music API for legal search, metadata, artwork, preview URLs, open streams, public radio, JioSaavn discovery, Gaana links, and web source helpers."
       },
       url: "/swagger",
-      theme: "deepSpace",
+      theme: "default",
       defaultHttpClient: {
         targetKey: "shell",
         clientKey: "curl"
@@ -379,13 +379,13 @@ export function docsPage(origin: string) {
         content="Scalar documentation for SayaMusicAPI endpoints, provider routes, legal media policy, and Cloudflare deployment.">
       <style>
         :root {
-          color-scheme: dark;
-          background: #080b12;
+          color-scheme: light;
+          background: #f7f8fb;
         }
 
         body {
           margin: 0;
-          background: #080b12;
+          background: #f7f8fb;
         }
 
         #app {
@@ -397,7 +397,7 @@ export function docsPage(origin: string) {
           min-height: 100vh;
           place-items: center;
           padding: 24px;
-          color: #e7ebf4;
+          color: #151922;
           font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         }
 
@@ -408,7 +408,7 @@ export function docsPage(origin: string) {
         }
 
         .scalar-loading span {
-          color: #8f99ad;
+          color: #5c6678;
           font-size: 13px;
           letter-spacing: 0.12em;
           text-transform: uppercase;
@@ -421,7 +421,7 @@ export function docsPage(origin: string) {
 
         .scalar-loading p {
           margin: 0;
-          color: #aeb7c8;
+          color: #5c6678;
           line-height: 1.6;
         }
       </style>

@@ -85,7 +85,8 @@ describe("SayaMusicAPI", () => {
     const docsHtml = await docs.text();
     expect(docsHtml).toContain("Scalar.createApiReference");
     expect(docsHtml).toContain('"layout": "modern"');
-    expect(docsHtml).toContain('"theme": "deepSpace"');
+    expect(docsHtml).toContain('"darkMode": false');
+    expect(docsHtml).toContain('"theme": "default"');
     expect(docsHtml).toContain('"url": "/swagger"');
     expect(docsHtml).toContain("https://cdn.jsdelivr.net/npm/@scalar/api-reference");
     expect(docsHtml).not.toContain("AUDIUS_API_KEY");
